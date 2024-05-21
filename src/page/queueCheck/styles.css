@@ -1,0 +1,14 @@
+@keyframes blink {
+  0% {
+    color: #ffffff;
+  } /* First color */
+  50% {
+    color: #363636;
+  } /* Second color */
+  100% {
+    color: #ffffff;
+  } /* Back to the first color */
+}
+.blinking-text {
+  animation: blink 2.5s infinite; /* Apply the blink animation */
+}
