@@ -3,18 +3,15 @@ import { BASE_URL } from "../../constants/constants";
 import { Row, Col } from "react-bootstrap";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
-// import "./styles.css";
 import SlideComponent from "../../components/SlideComponent";
 
 const SSEComponent = () => {
-  const [data, setData] = useState([]);
-  const [dataDrug, setDataDrug] = useState([]);
+  const [posts, setPosts] = useState([]);
+  const [postsEnd, setPostsEnd] = useState([]);
+  const [fillPost, setFillPost] = useState(null);
+  const [fillPhamacy, setFillPhamacy] = useState(null);
   const [lastData, setLastData] = useState(null);
-  const [lastDataDrug, setLastDataDrug] = useState(null);
-  const [lastDataQueue, setLastDataQueue] = useState(null);
-  const [lastDataQueueDrug, setLastDataQueueDrug] = useState(null);
-  const [lastDataQueueWait, setLastDataQueueWait] = useState([]);
-  const [lastDataDrugQueueWait, setLastDataDrugQueueWait] = useState([]);
+  const [lastPhamacy, setLastPhamacy] = useState(null);
   const url = "http://localhost:3000/assets/audio/";
   const please = "http://localhost:3000/assets/audio/please.mp3";
   const cashier = "http://localhost:3000/assets/audio/pay_cashier.mp3";
@@ -113,7 +110,7 @@ const SSEComponent = () => {
   const handleKeyDown = useCallback(
     (event) => {
       if (event.key === "PageUp") {
-        fetch(`${BASE_URL}/api/queueF`)
+        fetch(`${BASE_URL}/api/queueTest2`)
           .then((response) => response.json())
           .then((data) => {
             runFunction(data);
@@ -121,92 +118,10 @@ const SSEComponent = () => {
           .catch((error) => {
             console.error("Error fetching data:", error);
           });
-      } else if (event.key === "PageDown") {
-        fetch(`${BASE_URL}/api/queueD`)
-          .then((response) => response.json())
-          .then((data) => {
-            runFunctionDrug(data);
-          })
-          .catch((error) => {
-            console.error("Error fetching data:", error);
-          });
       }
     },
-    [runFunction, runFunctionDrug]
+    [runFunction]
   );
-
-  useEffect(() => {
-    const eventSource = new EventSource(`${BASE_URL}/api/queueFinanceRoom`);
-    const eventSourceQueue = new EventSource(`${BASE_URL}/api/queueFinance`);
-    const eventSourceQueueWait = new EventSource(
-      `${BASE_URL}/api/queueuserWaitFinance`
-    );
-    const eventSourceDrug = new EventSource(`${BASE_URL}/api/queueDrugRoom`);
-    const eventSourceDrugQueue = new EventSource(`${BASE_URL}/api/queueDrug`);
-    const eventSourceDrugQueueWait = new EventSource(
-      `${BASE_URL}/api/queueuserWaitDrug`
-    );
-
-    eventSource.onmessage = (event) => {
-      const newData = JSON.parse(event.data);
-      setData(newData);
-      if (!isEqual(newData, lastData)) {
-        setLastData(newData);
-      }
-    };
-
-    eventSourceQueue.onmessage = (event) => {
-      const newDataQueue = JSON.parse(event.data);
-      if (!isEqual(newDataQueue, lastDataQueue)) {
-        runFunction(newDataQueue);
-        setLastDataQueue(newDataQueue);
-      }
-    };
-
-    eventSourceQueueWait.onmessage = (event) => {
-      const newData = JSON.parse(event.data);
-      if (!isEqual(newData, lastData)) {
-        setLastDataQueueWait(newData);
-      }
-    };
-
-    eventSourceDrug.onmessage = (event) => {
-      const newData = JSON.parse(event.data);
-      setDataDrug(newData);
-      if (!isEqual(newData, lastDataDrug)) {
-        setLastDataDrug(newData);
-      }
-    };
-
-    eventSourceDrugQueue.onmessage = (event) => {
-      const newDataQueue = JSON.parse(event.data);
-      if (!isEqual(newDataQueue, lastDataQueueDrug)) {
-        runFunctionDrug(newDataQueue);
-        setLastDataQueueDrug(newDataQueue);
-      }
-    };
-    eventSourceDrugQueueWait.onmessage = (event) => {
-      const newData = JSON.parse(event.data);
-      if (!isEqual(newData, lastDataDrug)) {
-        setLastDataDrugQueueWait(newData);
-      }
-    };
-    return () => {
-      eventSource.close();
-      eventSourceQueue.close();
-      eventSourceQueueWait.close();
-      eventSourceDrug.close();
-      eventSourceDrugQueue.close();
-      eventSourceDrugQueueWait.close();
-    };
-  }, [
-    lastData,
-    lastDataQueue,
-    lastDataDrug,
-    lastDataQueueDrug,
-    runFunction,
-    runFunctionDrug,
-  ]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
@@ -215,6 +130,51 @@ const SSEComponent = () => {
     };
   }, [handleKeyDown]);
 
+  useEffect(() => {
+    const eventSource = new EventSource(`${BASE_URL}/api/QKMH_Process`);
+
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      const dataWait = data.slice(0, 9);
+      setPosts(dataWait);
+
+      //เรียกจ่ายเงิน
+      const filteredBilling = data.filter(
+        (post) => post.PresStatus === "Billing Inprogress"
+      );
+
+      // หาเวลาที่มากที่สุด จ่ายเงิน
+      const newDataQueue = filteredBilling.sort(
+        (a, b) => new Date(b.MWhen) - new Date(a.MWhen)
+      )[0];
+      //เรียกรับยา
+      const filteredPhamacy = data.filter(
+        (post) => post.PresStatus === "Phamacy Dispensed"
+      );
+      // หาเวลาที่มากที่สุด รับยา
+      const newDataQueuePhamacy = filteredPhamacy.sort(
+        (a, b) => new Date(b.MWhen) - new Date(a.MWhen)
+      )[0];
+      if (!isEqual(newDataQueue, lastData)) {
+        setFillPost(newDataQueue);
+        runFunction(newDataQueue);
+        setLastData(newDataQueue);
+      }
+      if (!isEqual(newDataQueuePhamacy, lastPhamacy)) {
+        setFillPhamacy(newDataQueuePhamacy);
+        runFunctionDrug(newDataQueuePhamacy);
+        setLastPhamacy(newDataQueuePhamacy);
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.error("EventSource error:", error);
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [lastData, runFunction]);
   return (
     <>
       <div
@@ -243,203 +203,89 @@ const SSEComponent = () => {
               </div>
             </Col>
             <Col lg={6}>
+              <div style={titleTop}>
+                <p
+                  style={{
+                    margin: "0",
+                    marginRight: "9%",
+                    marginLeft: "8%",
+                  }}
+                >
+                  ห้องจ่ายเงิน
+                </p>
+                <div
+                  style={{
+                    float: "center",
+                    borderRight: "3px solid darkcyan",
+                    paddingRight: "0.5rem",
+                    marginRight: "13%",
+                    height: "75%",
+                    marginTop: "10px",
+                  }}
+                ></div>
+                <p style={{}}>ห้องรับยา</p>
+              </div>
               <div
                 style={{
                   display: "flex",
                   flexDirection: "row",
-                  backgroundColor: "#9575CD",
-                  color: "#ffffff",
-                  fontWeight: "bold",
-                  fontSize: "3.5rem",
-                  textAlign: "center",
-                  width: "95%",
-                  height: "10%",
-                  borderRadius: "50px",
-                  textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-                  boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
+                  width: "100%",
                 }}
               >
-                <p
-                  style={{
-                    margin: "0",
-                    marginRight: "7%",
-                    marginLeft: "10%",
-                  }}
-                >
-                  ห้องการเงิน
-                </p>
-                <div
-                  style={{
-                    float: "left",
-                    borderRight: "3px solid darkcyan",
-                    paddingRight: "0.5rem",
-                    marginRight: "15%",
-                    height: "75%",
-                    marginTop: "10px",
-                  }}
-                ></div>
-                <p style={{}}>ห้องยา</p>
-              </div>
-              <div style={{ display: "flex", flexDirection: "row" }}>
-                {data.length === 0 ? (
-                  <div
-                    style={{
-                      backgroundColor: "#9575CD",
-                      fontSize: `5rem`,
-                      fontWeight: "bold",
-                      borderRadius: "50px",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      height: "300px",
-                      width: "45%",
-                      textShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
-                      boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
-                      marginTop: "10px",
-                    }}
-                  >
-                    ยังไม่มีคิว
-                  </div>
-                ) : (
-                  data
-                    .filter((item) => item.StatusQ === 4)
-                    .map((item, index) => (
+                {fillPost ? (
+                  <>
+                    <Col lg={6}>
                       <div
-                        style={{
-                          backgroundColor:
-                            index % 2 === 0 ? "#B39DDB" : "#D1C4E9",
-                          fontSize: `${index === 0 ? 10 : 3}rem`,
-                          fontWeight: "bold",
-                          borderRadius: "50px",
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          height: "300px",
-                          width: "45%",
-                          textShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
-                          boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
-                          marginTop: "10px",
-                        }}
-                        key={index}
+                        style={boxshowQueue}
                       >
-                        <div style={{ display: "flex", flexDirection: "row" }}>
-                          <p
-                            style={{
-                              margin: "0",
-                              marginRight: "0%",
-                              marginLeft: "0",
-                            }}
-                            className="blinking-text"
-                          >
-                            {item.VN}
-                          </p>
-                        </div>
+                        <p className="blinking-text">{fillPost.VisitNumber}</p>
                       </div>
-                    ))
-                )}
-                <div
-                  style={{
-                    float: "center",
-                    borderLeft: "3px solid darkcyan",
-                    paddingRight: "0.5rem",
-                    marginLeft: "2.7%",
-                    marginRight: "-5%",
-                    height: "300px",
-                    marginTop: "10px",
-                  }}
-                ></div>
-                <div
-                  style={{
-                    // float: "left",
-                    borderRight: "3px solid darkcyan",
-                    paddingRight: "0.5rem",
-                    marginRight: "0%",
-                    marginLeft: "5%",
-                    height: "75%",
-                    marginTop: "10px",
-                  }}
-                ></div>
-                {dataDrug.length === 0 ? (
-                  <div
-                    style={{
-                      backgroundColor: "#9575CD",
-                      fontSize: `5rem`,
-                      fontWeight: "bold",
-                      borderRadius: "50px",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      height: "300px",
-                      width: "45%",
-                      textShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
-                      boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
-                      marginTop: "10px",
-                    }}
-                  >
-                    ยังไม่มีคิว
-                  </div>
-                ) : (
-                  dataDrug
-                    .filter((item) => item.StatusQ === 6)
-                    .map((item, index) => (
+                    </Col>
+                    <Col lg={6}>
                       <div
-                        style={{
-                          backgroundColor:
-                            index % 2 === 0 ? "#B39DDB" : "#D1C4E9",
-                          fontSize: `${index === 0 ? 10 : 3}rem`,
-                          fontWeight: "bold",
-                          borderRadius: "50px",
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          height: "300px",
-                          width: "45%",
-                          textShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
-                          boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
-                          marginTop: "10px",
-                        }}
-                        key={index}
+                        style={boxshowQueue}
                       >
-                        <div style={{ display: "flex", flexDirection: "row" }}>
-                          <p
-                            style={{
-                              margin: "0",
-                              marginRight: "0%",
-                              marginLeft: "0",
-                            }}
-                            className="blinking-text"
-                          >
-                            {item.VN}
-                          </p>
-                        </div>
+                        <p className="blinking-text">{fillPost.LocationUID}</p>
                       </div>
-                    ))
+                    </Col>
+                  </>
+                ) : (
+                  <Col lg={12}>
+                    <div
+                      style={boxshowQueue}
+                    >
+                      <p className="blinking-text"></p>
+                    </div>
+                  </Col>
                 )}
-              </div>
-
-              <div style={{ marginTop: "10px" }}>
-                <p
-                  style={{
-                    backgroundColor: "#9575CD",
-                    color: "#ffffff",
-                    fontWeight: "bold",
-                    fontSize: "3.5rem",
-                    textAlign: "center",
-                    width: "95%",
-                    height: "10%",
-                    borderRadius: "50px",
-                    textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-                    boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
-                  }}
-                >
-                  รอเรียกคิว
-                </p>
               </div>
               <div
-                style={{ display: "flex", flexDirection: "row", width: "48%" }}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  width: "48%",
+                  marginTop: "30px",
+                }}
               >
                 <Col lg={12}>
-                  {lastDataQueueWait.length === 0 ? (
+                  <p
+                    style={{
+                      backgroundColor: "#9575CD",
+                      color: "#ffffff",
+                      fontWeight: "bold",
+                      fontSize: "2.5rem",
+                      textAlign: "center",
+                      width: "95%",
+                      height: "15%",
+                      borderRadius: "50px",
+                      textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+                      boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
+                    }}
+                  >
+                    รอเรียกจ่ายเงิน
+                  </p>
+                  {/* รอเรียกจ่ายเงิน */}
+                  {posts.length === 0 ? (
                     <Col lg={12}>
                       <div
                         style={{
@@ -447,9 +293,9 @@ const SSEComponent = () => {
                           color: "#ffffff",
                           padding: "10px",
                           borderRadius: "10px",
-                          width: "35%",
+                          width: "40%",
                           height: "10%",
-                          fontSize: "2rem",
+                          fontSize: "2.5rem",
                           textAlign: "center",
                           fontWeight: "bold",
                           textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
@@ -457,7 +303,7 @@ const SSEComponent = () => {
                           margin: "10px",
                         }}
                       >
-                        <p>ไม่มีคิว</p>
+                        <p></p>
                       </div>
                     </Col>
                   ) : (
@@ -466,31 +312,33 @@ const SSEComponent = () => {
                         display: "flex",
                         flexDirection: "row",
                         flexWrap: "wrap",
-                        justifyContent: "left",
                       }}
                     >
-                      {lastDataQueueWait
-                        .filter((item) => item.StatusQ === 3)
+                      {posts
+                        .filter(
+                          (item) => item.PresStatus === "Medical Discharge"
+                        )
                         .map((item, index) => (
-                          <div
-                            key={index}
-                            style={{
-                              backgroundColor: "#B39DDB",
-                              color: "#ffffff",
-                              padding: "10px",
-                              borderRadius: "10px",
-                              width: "25%",
-                              height: "25%",
-                              fontSize: "2.5rem",
-                              textAlign: "center",
-                              fontWeight: "bold",
-                              textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-                              boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
-                              margin: "10px",
-                              boxSizing: "border-box",
-                            }}
-                          >
-                            <p>{item.VN}</p>
+                          <div key={index}>
+                            <div
+                              key={index}
+                              style={{
+                                backgroundColor: "#B39DDB",
+                                color: "#ffffff",
+                                padding: "10px",
+                                borderRadius: "10px",
+                                width: "85%",
+                                height: "70%",
+                                fontSize: "2.5rem",
+                                textAlign: "center",
+                                fontWeight: "bold",
+                                textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+                                boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
+                                margin: "10px",
+                              }}
+                            >
+                              <p>{item.VisitNumber}</p>
+                            </div>
                           </div>
                         ))}
                     </div>
@@ -501,13 +349,30 @@ const SSEComponent = () => {
                     float: "center",
                     borderLeft: "3px solid darkcyan",
                     paddingRight: "0.5rem",
-                    marginRight: "15%",
-                    height: "250px",
-                    marginTop: "10px",
+                    marginRight: "0",
+                    height: "480px",
+                    marginTop: "20px",
                   }}
                 ></div>
-                <Col lg={12}>
-                  {lastDataDrugQueueWait.length === 0 ? (
+                {/* <Col lg={12}>
+                  <p
+                    style={{
+                      backgroundColor: "#9575CD",
+                      color: "#ffffff",
+                      fontWeight: "bold",
+                      fontSize: "2.5rem",
+                      textAlign: "center",
+                      width: "95%",
+                      height: "15%",
+                      borderRadius: "50px",
+                      textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+                      boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
+                    }}
+                  >
+                    รอรับยา
+                  </p>
+                  {/* รอรับยา */}
+                {/* {posts.length === 0 ? (
                     <Col lg={12}>
                       <div
                         style={{
@@ -515,18 +380,17 @@ const SSEComponent = () => {
                           color: "#ffffff",
                           padding: "10px",
                           borderRadius: "10px",
-                          width: "35%",
+                          width: "40%",
                           height: "10%",
-                          fontSize: "2rem",
+                          fontSize: "2.5rem",
                           textAlign: "center",
                           fontWeight: "bold",
                           textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
                           boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
                           margin: "10px",
-                          marginLeft: "-20%",
                         }}
                       >
-                        <p>ไม่มีคิว</p>
+                        <p></p>
                       </div>
                     </Col>
                   ) : (
@@ -535,37 +399,36 @@ const SSEComponent = () => {
                         display: "flex",
                         flexDirection: "row",
                         flexWrap: "wrap",
-                        justifyContent: "left",
-                        marginLeft: "-18%",
                       }}
                     >
-                      {lastDataDrugQueueWait
-                        .filter((item) => item.StatusQ === 5)
+                      {posts
+                        .filter((item) => item.PresStatus === "Arrived")
                         .map((item, index) => (
-                          <div
-                            key={index}
-                            style={{
-                              backgroundColor: "#B39DDB",
-                              color: "#ffffff",
-                              padding: "10px",
-                              borderRadius: "10px",
-                              width: "25%",
-                              height: "25%",
-                              fontSize: "2.5rem",
-                              textAlign: "center",
-                              fontWeight: "bold",
-                              textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-                              boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
-                              margin: "10px",
-                              boxSizing: "border-box",
-                            }}
-                          >
-                            <p>{item.VN}</p>
+                          <div key={index}>
+                            <div
+                              key={index}
+                              style={{
+                                backgroundColor: "#B39DDB",
+                                color: "#ffffff",
+                                padding: "10px",
+                                borderRadius: "10px",
+                                width: "85%",
+                                height: "70%",
+                                fontSize: "2.5rem",
+                                textAlign: "center",
+                                fontWeight: "bold",
+                                textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+                                boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
+                                margin: "10px",
+                              }}
+                            >
+                              <p>{item.VisitNumber}</p>
+                            </div>
                           </div>
                         ))}
                     </div>
-                  )}
-                </Col>
+                  )} */}
+                {/* </Col> */}
               </div>
             </Col>
           </Row>
@@ -576,4 +439,33 @@ const SSEComponent = () => {
   );
 };
 
+const titleTop = {
+  display: "flex",
+  flexDirection: "row",
+  backgroundColor: "#9575CD",
+  color: "#ffffff",
+  fontWeight: "bold",
+  fontSize: "3.5rem",
+  textAlign: "center",
+  width: "95%",
+  height: "10%",
+  borderRadius: "50px",
+  textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+  boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
+  marginTop: "-10%",
+};
+const boxshowQueue = {
+  backgroundColor: "#B39DDB",
+  fontSize: "10rem",
+  fontWeight: "bold",
+  borderRadius: "20px",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  height: "300px",
+  width: "95%",
+  textShadow: "2px 2px 2px rgba(0, 0, 0, 0.3)",
+  boxShadow: "2px 2px 2px rgba(0, 0, 0, 0.3)",
+  marginTop: "30px",
+};
 export default SSEComponent;

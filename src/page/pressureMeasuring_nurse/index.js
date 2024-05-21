@@ -103,7 +103,8 @@ const SSEComponent = () => {
 
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      setPosts(data);
+      const dataWait = data.slice(0, 9);
+      setPosts(dataWait);
       const filteredPosts = data.filter(
         (post) => post.PresStatus === "Send to Doctor"
       );
@@ -114,7 +115,6 @@ const SSEComponent = () => {
       const oldDataQueue = filteredPosts
         .sort((a, b) => new Date(b.MWhen) - new Date(a.MWhen))
         .slice(1, 6);
-      console.log(oldDataQueue);
       if (!isEqual(newDataQueue, lastData)) {
         setFillPost(newDataQueue);
         runFunction(newDataQueue);
@@ -159,23 +159,7 @@ const SSEComponent = () => {
               </div>
             </Col>
             <Col lg={6}>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  backgroundColor: "#9575CD",
-                  color: "#ffffff",
-                  fontWeight: "bold",
-                  fontSize: "3.5rem",
-                  textAlign: "center",
-                  width: "95%",
-                  height: "10%",
-                  borderRadius: "50px",
-                  textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-                  boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
-                  marginTop: "-10%",
-                }}
-              >
+              <div style={titleTop}>
                 <p
                   style={{
                     margin: "0",
@@ -204,47 +188,23 @@ const SSEComponent = () => {
                   width: "100%",
                 }}
               >
-                {fillPost && (
-                  <Col lg={6}>
-                    <div
-                      style={{
-                        backgroundColor: "#B39DDB",
-                        fontSize: `10rem`,
-                        fontWeight: "bold",
-                        borderRadius: "50px",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        height: "300px",
-                        width: "95%",
-                        textShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
-                        boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
-                        marginTop: "30px",
-                      }}
-                    >
-                      <p className="blinking-text">{fillPost.VisitNumber}</p>
-                    </div>
-                  </Col>
-                )}
-                {fillPost && (
-                  <Col lg={6}>
-                    <div
-                      style={{
-                        backgroundColor: "#B39DDB",
-                        fontSize: `10rem`,
-                        fontWeight: "bold",
-                        borderRadius: "50px",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        height: "300px",
-                        width: "95%",
-                        textShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
-                        boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
-                        marginTop: "30px",
-                      }}
-                    >
-                      <p className="blinking-text">{fillPost.LocationUID}</p>
+                {fillPost ? (
+                  <>
+                    <Col lg={6}>
+                      <div style={boxshowQueue}>
+                        <p className="blinking-text">{fillPost.VisitNumber}</p>
+                      </div>
+                    </Col>
+                    <Col lg={6}>
+                      <div style={boxshowQueue}>
+                        <p className="blinking-text">{fillPost.LocationUID}</p>
+                      </div>
+                    </Col>
+                  </>
+                ) : (
+                  <Col lg={12}>
+                    <div style={boxshowQueue}>
+                      <p className="blinking-text"></p>
                     </div>
                   </Col>
                 )}
@@ -258,42 +218,12 @@ const SSEComponent = () => {
                 }}
               >
                 <Col lg={12}>
-                  <p
-                    style={{
-                      backgroundColor: "#9575CD",
-                      color: "#ffffff",
-                      fontWeight: "bold",
-                      fontSize: "2.5rem",
-                      textAlign: "center",
-                      width: "95%",
-                      height: "15%",
-                      borderRadius: "50px",
-                      textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-                      boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
-                    }}
-                  >
-                    รอเรียกตรวจ
-                  </p>
+                  <p style={boxtitle}>รอเรียกตรวจ</p>
                   {/* รอเข้าตรวจ */}
                   {posts.length === 0 ? (
                     <Col lg={12}>
-                      <div
-                        style={{
-                          backgroundColor: "#B39DDB",
-                          color: "#ffffff",
-                          padding: "10px",
-                          borderRadius: "10px",
-                          width: "40%",
-                          height: "10%",
-                          fontSize: "2.5rem",
-                          textAlign: "center",
-                          fontWeight: "bold",
-                          textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-                          boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
-                          margin: "10px",
-                        }}
-                      >
-                        <p>ไม่มีคิว</p>
+                      <div style={boxStyle}>
+                        <p></p>
                       </div>
                     </Col>
                   ) : (
@@ -308,23 +238,7 @@ const SSEComponent = () => {
                         .filter((item) => item.PresStatus === "Arrived")
                         .map((item, index) => (
                           <div key={index}>
-                            <div
-                              key={index}
-                              style={{
-                                backgroundColor: "#B39DDB",
-                                color: "#ffffff",
-                                padding: "10px",
-                                borderRadius: "10px",
-                                width: "85%",
-                                height: "70%",
-                                fontSize: "2.5rem",
-                                textAlign: "center",
-                                fontWeight: "bold",
-                                textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-                                boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
-                                margin: "10px",
-                              }}
-                            >
+                            <div key={index} style={boxStyle}>
                               <p>{item.VisitNumber}</p>
                             </div>
                           </div>
@@ -343,22 +257,7 @@ const SSEComponent = () => {
                   }}
                 ></div>
                 <Col lg={12}>
-                  <p
-                    style={{
-                      backgroundColor: "#9575CD",
-                      color: "#ffffff",
-                      fontWeight: "bold",
-                      fontSize: "2.5rem",
-                      textAlign: "center",
-                      width: "95%",
-                      height: "15%",
-                      borderRadius: "50px",
-                      textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-                      boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
-                    }}
-                  >
-                    เข้าห้องตรวจ
-                  </p>
+                  <p style={boxtitle}>เข้าห้องตรวจ</p>
                   {/* เข้าห้องตรวจ */}
                   {posts.length === 0 ? (
                     <Col lg={12}>
@@ -375,10 +274,10 @@ const SSEComponent = () => {
                           fontWeight: "bold",
                           textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
                           boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
-                          margin: "10px auto", // Center the "ไม่มีคิว" message
+                          margin: "10px auto",
                         }}
                       >
-                        <p>ไม่มีคิว</p>
+                        <p></p>
                       </div>
                     </Col>
                   ) : (
@@ -420,6 +319,21 @@ const SSEComponent = () => {
     </>
   );
 };
+const titleTop = {
+  display: "flex",
+  flexDirection: "row",
+  backgroundColor: "#9575CD",
+  color: "#ffffff",
+  fontWeight: "bold",
+  fontSize: "3.5rem",
+  textAlign: "center",
+  width: "95%",
+  height: "10%",
+  borderRadius: "50px",
+  textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+  boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
+  marginTop: "-10%",
+};
 const headerStyle = {
   backgroundColor: "#B39DDB",
   color: "#ffffff",
@@ -444,5 +358,46 @@ const rowStyle = {
 const cellStyle = {
   padding: "10px",
   borderBottom: "1px solid #ddd",
+};
+
+const boxStyle = {
+  backgroundColor: "#B39DDB",
+  color: "#ffffff",
+  padding: "10px",
+  borderRadius: "10px",
+  width: "85%",
+  height: "70%",
+  fontSize: "2.5rem",
+  textAlign: "center",
+  fontWeight: "bold",
+  textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+  boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
+  margin: "10px",
+};
+const boxtitle = {
+  backgroundColor: "#9575CD",
+  color: "#ffffff",
+  fontWeight: "bold",
+  fontSize: "2.5rem",
+  textAlign: "center",
+  width: "95%",
+  height: "15%",
+  borderRadius: "50px",
+  textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+  boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
+};
+const boxshowQueue = {
+  backgroundColor: "#B39DDB",
+  fontSize: "10rem",
+  fontWeight: "bold",
+  borderRadius: "20px",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  height: "300px",
+  width: "95%",
+  textShadow: "2px 2px 2px rgba(0, 0, 0, 0.3)",
+  boxShadow: "2px 2px 2px rgba(0, 0, 0, 0.3)",
+  marginTop: "30px",
 };
 export default SSEComponent;
