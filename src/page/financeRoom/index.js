@@ -241,7 +241,7 @@ const SSEComponent = () => {
                     </Col>
                   </>
                 ) : (
-                  <Col lg={12}>
+                  <Col lg={6}>
                     <div style={boxshowQueue}>
                       <p className="blinking-text"></p>
                     </div>
@@ -258,7 +258,7 @@ const SSEComponent = () => {
                     </Col>
                   </>
                 ) : (
-                  <Col lg={10}>
+                  <Col lg={6}>
                     <div style={boxshowQueue}>
                       <p className="blinking-text"></p>
                     </div>
