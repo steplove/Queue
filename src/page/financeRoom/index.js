@@ -7,7 +7,6 @@ import SlideComponent from "../../components/SlideComponent";
 
 const SSEComponent = () => {
   const [posts, setPosts] = useState([]);
-  const [postsEnd, setPostsEnd] = useState([]);
   const [fillPost, setFillPost] = useState(null);
   const [fillPhamacy, setFillPhamacy] = useState(null);
   const [lastData, setLastData] = useState(null);
@@ -138,7 +137,7 @@ const SSEComponent = () => {
       const dataWait = data.slice(0, 9);
       setPosts(dataWait);
 
-      //เรียกจ่ายเงิน
+      //จ่ายเงิน
       const filteredBilling = data.filter(
         (post) => post.PresStatus === "Billing Inprogress"
       );
@@ -147,7 +146,7 @@ const SSEComponent = () => {
       const newDataQueue = filteredBilling.sort(
         (a, b) => new Date(b.MWhen) - new Date(a.MWhen)
       )[0];
-      //เรียกรับยา
+      //รับยา
       const filteredPhamacy = data.filter(
         (post) => post.PresStatus === "Phamacy Dispensed"
       );
@@ -288,9 +287,9 @@ const SSEComponent = () => {
                       boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
                     }}
                   >
-                    รอเรียกจ่ายเงิน
+                    รอจ่ายเงิน
                   </p>
-                  {/* รอเรียกจ่ายเงิน */}
+                  {/* รอจ่ายเงิน */}
                   {posts.length === 0 ? (
                     <Col lg={12}>
                       <div
