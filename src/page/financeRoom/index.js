@@ -52,8 +52,8 @@ const SSEComponent = () => {
 
   const runFunction = useCallback(
     (newDataQueue) => {
-      if (newDataQueue && newDataQueue.length > 0) {
-        const latestData = newDataQueue[0].VN;
+      if (newDataQueue) {
+        const latestData = newDataQueue.VisitNumber;
         // const roomVN = newDataQueue[0].Rooms;
         const soundFiles = latestData
           .split("")
@@ -80,8 +80,8 @@ const SSEComponent = () => {
   );
   const runFunctionDrug = useCallback(
     (newDataQueue) => {
-      if (newDataQueue && newDataQueue.length > 0) {
-        const latestData = newDataQueue[0].VN;
+      if (newDataQueue) {
+        const latestData = newDataQueue.VisitNumber;
         // const roomVN = newDataQueue[0].Rooms;
         const soundFiles = latestData
           .split("")
@@ -174,7 +174,7 @@ const SSEComponent = () => {
     return () => {
       eventSource.close();
     };
-  }, [lastData, runFunction]);
+  }, [lastData, runFunction, lastPhamacy, runFunctionDrug]);
   return (
     <>
       <div
@@ -235,25 +235,31 @@ const SSEComponent = () => {
                 {fillPost ? (
                   <>
                     <Col lg={6}>
-                      <div
-                        style={boxshowQueue}
-                      >
+                      <div style={boxshowQueue}>
                         <p className="blinking-text">{fillPost.VisitNumber}</p>
-                      </div>
-                    </Col>
-                    <Col lg={6}>
-                      <div
-                        style={boxshowQueue}
-                      >
-                        <p className="blinking-text">{fillPost.LocationUID}</p>
                       </div>
                     </Col>
                   </>
                 ) : (
                   <Col lg={12}>
-                    <div
-                      style={boxshowQueue}
-                    >
+                    <div style={boxshowQueue}>
+                      <p className="blinking-text"></p>
+                    </div>
+                  </Col>
+                )}
+                {fillPhamacy ? (
+                  <>
+                    <Col lg={6}>
+                      <div style={boxshowQueue}>
+                        <p className="blinking-text">
+                          {fillPhamacy.VisitNumber}
+                        </p>
+                      </div>
+                    </Col>
+                  </>
+                ) : (
+                  <Col lg={10}>
+                    <div style={boxshowQueue}>
                       <p className="blinking-text"></p>
                     </div>
                   </Col>
@@ -354,7 +360,7 @@ const SSEComponent = () => {
                     marginTop: "20px",
                   }}
                 ></div>
-                {/* <Col lg={12}>
+                <Col lg={12}>
                   <p
                     style={{
                       backgroundColor: "#9575CD",
@@ -372,7 +378,7 @@ const SSEComponent = () => {
                     รอรับยา
                   </p>
                   {/* รอรับยา */}
-                {/* {posts.length === 0 ? (
+                  {posts.length === 0 ? (
                     <Col lg={12}>
                       <div
                         style={{
@@ -427,8 +433,8 @@ const SSEComponent = () => {
                           </div>
                         ))}
                     </div>
-                  )} */}
-                {/* </Col> */}
+                  )}
+                </Col>
               </div>
             </Col>
           </Row>
