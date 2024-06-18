@@ -7,18 +7,15 @@ import SlideComponent from "../../components/SlideComponent";
 
 const SSEComponent = () => {
   const [posts, setPosts] = useState([]);
+  const [postsEnd, setPostsEnd] = useState([]);
   const [fillPost, setFillPost] = useState(null);
-  const [fillPhamacy, setFillPhamacy] = useState(null);
   const [lastData, setLastData] = useState(null);
-  const [lastPhamacy, setLastPhamacy] = useState(null);
   const url = BASE_URL_Sound + "/assets/audio/";
   const please = BASE_URL_Sound + "/assets/audio/please.mp3";
-  const cashier = BASE_URL_Sound + "/assets/audio/pay_cashier.mp3";
-  const paydrug = BASE_URL_Sound + "/assets/audio/pay-drug.mp3";
+  const doctor_room = BASE_URL_Sound + "/assets/audio/doctor_room.mp3";
   const ka = BASE_URL_Sound + "/assets/audio/ka.mp3";
   const isPlayingRef = useRef(false);
   const audioQueue = useRef([]);
-
   const isEqual = (obj1, obj2) => JSON.stringify(obj1) === JSON.stringify(obj2);
 
   const playNextSound = useCallback(() => {
@@ -53,57 +50,27 @@ const SSEComponent = () => {
     (newDataQueue) => {
       if (newDataQueue) {
         const latestData = newDataQueue.VisitNumber;
-        // const roomVisitNumber = newDataQueue[0].Rooms;
+        const RoomsData = newDataQueue.Rooms;
         const soundFiles = latestData
           .split("")
           .map((digit) => `${url}${digit}.mp3`);
-        // const soundFilesRooms = roomVisitNumber
-        //   .split("")
-        //   .map((digit) => `${url}${digit}.mp3`);
-        const combinedSrcArray = [please, ...soundFiles, cashier];
-        const newCombinedSrcArray = combinedSrcArray.concat(
-          // soundFilesRooms,
-          ka
-        );
-
-        audioQueue.current.push(newCombinedSrcArray);
-
-        if (!isPlayingRef.current) {
-          playNextSound();
-        }
-      } else {
-        console.log("ไม่มีข้อมูลใหม่");
-      }
-    },
-    [url, please, cashier, ka, playNextSound]
-  );
-  const runFunctionDrug = useCallback(
-    (newDataQueue) => {
-      if (newDataQueue) {
-        const latestData = newDataQueue.VisitNumber;
-        // const roomVisitNumber = newDataQueue[0].Rooms;
-        const soundFiles = latestData
+        const soundFilesRooms = RoomsData.toString()
           .split("")
           .map((digit) => `${url}${digit}.mp3`);
-        // const soundFilesRooms = roomVisitNumber
-        //   .split("")
-        //   .map((digit) => `${url}${digit}.mp3`);
-        const combinedSrcArray = [please, ...soundFiles, paydrug];
+        const combinedSrcArray = [please, ...soundFiles, doctor_room];
         const newCombinedSrcArray = combinedSrcArray.concat(
-          // soundFilesRooms,
+          soundFilesRooms,
           ka
         );
-
         audioQueue.current.push(newCombinedSrcArray);
-
         if (!isPlayingRef.current) {
           playNextSound();
         }
-      } else {
-        console.log("ไม่มีข้อมูลใหม่");
+        // } else {
+        //   console.log("ไม่มีข้อมูลใหม่");
       }
     },
-    [url, please, paydrug, ka, playNextSound]
+    [url, please, doctor_room, ka, playNextSound]
   );
 
   const handleKeyDown = useCallback(
@@ -136,31 +103,21 @@ const SSEComponent = () => {
       const data = JSON.parse(event.data);
       const dataWait = data.slice(0, 9);
       setPosts(dataWait);
-
-      //จ่ายเงิน
-      const filteredBilling = data.filter((post) => post.PresStatus === "Pay");
-
-      // หาเวลาที่มากที่สุด จ่ายเงิน
-      const newDataQueue = filteredBilling.sort(
-        (a, b) => new Date(b.MWhen) - new Date(a.MWhen)
-      )[0];
-      //รับยา
-      const filteredPhamacy = data.filter(
-        (post) => post.PresStatus === "Drug"
+      const filteredPosts = data.filter(
+        (post) => post.PresStatus === "Sent_to_doctor" && post.Station === 1
       );
-      // หาเวลาที่มากที่สุด รับยา
-      const newDataQueuePhamacy = filteredPhamacy.sort(
+      // หาเวลาที่มากที่สุด
+      const newDataQueue = filteredPosts.sort(
         (a, b) => new Date(b.MWhen) - new Date(a.MWhen)
       )[0];
+      const oldDataQueue = filteredPosts
+        .sort((a, b) => new Date(b.MWhen) - new Date(a.MWhen))
+        .slice(1, 6);
       if (!isEqual(newDataQueue, lastData)) {
         setFillPost(newDataQueue);
         runFunction(newDataQueue);
         setLastData(newDataQueue);
-      }
-      if (!isEqual(newDataQueuePhamacy, lastPhamacy)) {
-        setFillPhamacy(newDataQueuePhamacy);
-        runFunctionDrug(newDataQueuePhamacy);
-        setLastPhamacy(newDataQueuePhamacy);
+        setPostsEnd(oldDataQueue);
       }
     };
 
@@ -171,7 +128,8 @@ const SSEComponent = () => {
     return () => {
       eventSource.close();
     };
-  }, [lastData, runFunction, lastPhamacy, runFunctionDrug]);
+  }, [lastData, runFunction]);
+  console.log(posts);
   return (
     <>
       <div
@@ -204,11 +162,11 @@ const SSEComponent = () => {
                 <p
                   style={{
                     margin: "0",
-                    marginRight: "9%",
-                    marginLeft: "8%",
+                    marginRight: "12%",
+                    marginLeft: "12%",
                   }}
                 >
-                  ห้องจ่ายเงิน
+                  หมายเลข
                 </p>
                 <div
                   style={{
@@ -220,7 +178,7 @@ const SSEComponent = () => {
                     marginTop: "10px",
                   }}
                 ></div>
-                <p style={{}}>ห้องรับยา</p>
+                <p style={{}}>ห้องตรวจ</p>
               </div>
               <div
                 style={{
@@ -236,26 +194,14 @@ const SSEComponent = () => {
                         <p className="blinking-text">{fillPost.VisitNumber}</p>
                       </div>
                     </Col>
-                  </>
-                ) : (
-                  <Col lg={6}>
-                    <div style={boxshowQueue}>
-                      <p className="blinking-text"></p>
-                    </div>
-                  </Col>
-                )}
-                {fillPhamacy ? (
-                  <>
                     <Col lg={6}>
                       <div style={boxshowQueue}>
-                        <p className="blinking-text">
-                          {fillPhamacy.VisitNumber}
-                        </p>
+                        <p className="blinking-text">{fillPost.Rooms}</p>
                       </div>
                     </Col>
                   </>
                 ) : (
-                  <Col lg={6}>
+                  <Col lg={12}>
                     <div style={boxshowQueue}>
                       <p className="blinking-text"></p>
                     </div>
@@ -271,41 +217,11 @@ const SSEComponent = () => {
                 }}
               >
                 <Col lg={12}>
-                  <p
-                    style={{
-                      backgroundColor: "#9575CD",
-                      color: "#ffffff",
-                      fontWeight: "bold",
-                      fontSize: "2.5rem",
-                      textAlign: "center",
-                      width: "95%",
-                      height: "15%",
-                      borderRadius: "50px",
-                      textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-                      boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
-                    }}
-                  >
-                    รอจ่ายเงิน
-                  </p>
-                  {/* รอจ่ายเงิน */}
+                  <p style={boxtitle}>รอเรียกตรวจ</p>
+                  {/* รอเข้าตรวจ */}
                   {posts.length === 0 ? (
                     <Col lg={12}>
-                      <div
-                        style={{
-                          backgroundColor: "#B39DDB",
-                          color: "#ffffff",
-                          padding: "10px",
-                          borderRadius: "10px",
-                          width: "40%",
-                          height: "10%",
-                          fontSize: "2.5rem",
-                          textAlign: "center",
-                          fontWeight: "bold",
-                          textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-                          boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
-                          margin: "10px",
-                        }}
-                      >
+                      <div style={boxStyle}>
                         <p></p>
                       </div>
                     </Col>
@@ -318,26 +234,14 @@ const SSEComponent = () => {
                       }}
                     >
                       {posts
-                        .filter((item) => item.PresStatus === "Waiting_to_pay")
+                        .filter(
+                          (item) =>
+                            item.PresStatus === "Registered" &&
+                            item.Station === 1
+                        )
                         .map((item, index) => (
                           <div key={index}>
-                            <div
-                              key={index}
-                              style={{
-                                backgroundColor: "#B39DDB",
-                                color: "#ffffff",
-                                padding: "10px",
-                                borderRadius: "10px",
-                                width: "85%",
-                                height: "70%",
-                                fontSize: "2.5rem",
-                                textAlign: "center",
-                                fontWeight: "bold",
-                                textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-                                boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
-                                margin: "10px",
-                              }}
-                            >
+                            <div key={index} style={boxStyle}>
                               <p>{item.VisitNumber}</p>
                             </div>
                           </div>
@@ -356,23 +260,8 @@ const SSEComponent = () => {
                   }}
                 ></div>
                 <Col lg={12}>
-                  <p
-                    style={{
-                      backgroundColor: "#9575CD",
-                      color: "#ffffff",
-                      fontWeight: "bold",
-                      fontSize: "2.5rem",
-                      textAlign: "center",
-                      width: "95%",
-                      height: "15%",
-                      borderRadius: "50px",
-                      textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-                      boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
-                    }}
-                  >
-                    รอรับยา
-                  </p>
-                  {/* รอรับยา */}
+                  <p style={boxtitle}>เข้าห้องตรวจ</p>
+                  {/* เข้าห้องตรวจ */}
                   {posts.length === 0 ? (
                     <Col lg={12}>
                       <div
@@ -388,48 +277,39 @@ const SSEComponent = () => {
                           fontWeight: "bold",
                           textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
                           boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
-                          margin: "10px",
+                          margin: "10px auto",
                         }}
                       >
                         <p></p>
                       </div>
                     </Col>
                   ) : (
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "row",
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      {posts
-                        .filter(
-                          (item) =>
-                            item.PresStatus === "Pay" && item.HaveDrug === 1
-                        )
-                        .map((item, index) => (
-                          <div key={index}>
-                            <div
-                              key={index}
-                              style={{
-                                backgroundColor: "#B39DDB",
-                                color: "#ffffff",
-                                padding: "10px",
-                                borderRadius: "10px",
-                                width: "85%",
-                                height: "70%",
-                                fontSize: "2.5rem",
-                                textAlign: "center",
-                                fontWeight: "bold",
-                                textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-                                boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
-                                margin: "10px",
-                              }}
-                            >
-                              <p>{item.VisitNumber}</p>
-                            </div>
-                          </div>
-                        ))}
+                    <div style={{ padding: "10px" }}>
+                      <table
+                        style={{
+                          width: "100%",
+                          borderCollapse: "collapse",
+                        }}
+                      >
+                        <thead>
+                          <tr>
+                            <th style={headerStyle}>หมายเลข</th>
+                            <th style={headerStyle}>ห้องตรวจ</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {postsEnd
+                            .filter(
+                              (item) => item.PresStatus === "Sent_to_doctor"
+                            )
+                            .map((item, index) => (
+                              <tr key={index} style={rowStyle}>
+                                <td style={cellStyle}>{item.VisitNumber}</td>
+                                <td style={cellStyle}>{item.Rooms}</td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
                     </div>
                   )}
                 </Col>
@@ -442,7 +322,6 @@ const SSEComponent = () => {
     </>
   );
 };
-
 const titleTop = {
   display: "flex",
   flexDirection: "row",
@@ -457,6 +336,58 @@ const titleTop = {
   textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
   boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
   marginTop: "-10%",
+};
+const headerStyle = {
+  backgroundColor: "#B39DDB",
+  color: "#ffffff",
+  padding: "10px",
+  borderRadius: "10px 10px 0 0",
+  fontSize: "1.5rem",
+  textAlign: "center",
+  fontWeight: "bold",
+  textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+  boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
+};
+
+const rowStyle = {
+  backgroundColor: "#f3e5f5",
+  color: "#000000",
+  textAlign: "center",
+  fontSize: "2rem",
+  fontWeight: "bold",
+  textShadow: "1px 1px 2px rgba(0, 0, 0, 0.1)",
+};
+
+const cellStyle = {
+  padding: "10px",
+  borderBottom: "1px solid #ddd",
+};
+
+const boxStyle = {
+  backgroundColor: "#B39DDB",
+  color: "#ffffff",
+  padding: "10px",
+  borderRadius: "10px",
+  width: "85%",
+  height: "70%",
+  fontSize: "2.5rem",
+  textAlign: "center",
+  fontWeight: "bold",
+  textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+  boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
+  margin: "10px",
+};
+const boxtitle = {
+  backgroundColor: "#9575CD",
+  color: "#ffffff",
+  fontWeight: "bold",
+  fontSize: "2.5rem",
+  textAlign: "center",
+  width: "95%",
+  height: "15%",
+  borderRadius: "50px",
+  textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+  boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
 };
 const boxshowQueue = {
   backgroundColor: "#B39DDB",

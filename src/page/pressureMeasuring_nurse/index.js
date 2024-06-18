@@ -51,8 +51,8 @@ const SSEComponent = () => {
     (newDataQueue) => {
       console.log(newDataQueue, "newDataQueue");
       if (newDataQueue) {
-        const latestData = newDataQueue.VisitNumber;
-        const RoomsData = newDataQueue.LocationUID;
+        const latestData = newDataQueue.VN;
+        const RoomsData = newDataQueue.Rooms;
         const soundFiles = latestData
           .split("")
           .map((digit) => `${url}${digit}.mp3`);
@@ -99,21 +99,24 @@ const SSEComponent = () => {
   }, [handleKeyDown]);
 
   useEffect(() => {
-    const eventSource = new EventSource(`${BASE_URL}/api/QKMH_Process`);
+    const eventSource = new EventSource(`${BASE_URL}/api/queue`);
 
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
       const dataWait = data.slice(0, 9);
       setPosts(dataWait);
       const filteredPosts = data.filter(
-        (post) => post.PresStatus === "Send to Doctor"
+        (post) =>
+          (post.StatusQ === 4 && post.LocationID === 28) ||
+          (post.StatusQ === 4 && post.LocationID === 1008) ||
+          (post.StatusQ === 4 && post.LocationID === 1010)
       );
       // หาเวลาที่มากที่สุด
       const newDataQueue = filteredPosts.sort(
-        (a, b) => new Date(b.MWhen) - new Date(a.MWhen)
+        (a, b) => new Date(b.EntryDatetime) - new Date(a.EntryDatetime)
       )[0];
       const oldDataQueue = filteredPosts
-        .sort((a, b) => new Date(b.MWhen) - new Date(a.MWhen))
+        .sort((a, b) => new Date(b.EntryDatetime) - new Date(a.EntryDatetime))
         .slice(1, 6);
       if (!isEqual(newDataQueue, lastData)) {
         setFillPost(newDataQueue);
@@ -192,12 +195,12 @@ const SSEComponent = () => {
                   <>
                     <Col lg={6}>
                       <div style={boxshowQueue}>
-                        <p className="blinking-text">{fillPost.VisitNumber}</p>
+                        <p className="blinking-text">{fillPost.VN}</p>
                       </div>
                     </Col>
                     <Col lg={6}>
                       <div style={boxshowQueue}>
-                        <p className="blinking-text">{fillPost.LocationUID}</p>
+                        <p className="blinking-text">{fillPost.Rooms}</p>
                       </div>
                     </Col>
                   </>
@@ -235,11 +238,16 @@ const SSEComponent = () => {
                       }}
                     >
                       {posts
-                        .filter((item) => item.PresStatus === "Arrived")
+                        .filter(
+                          (item) =>
+                            (item.StatusQ === 3 && item.LocationID === 28) ||
+                            (item.StatusQ === 3 && item.LocationID === 1008) ||
+                            (item.StatusQ === 3 && item.LocationID === 1010)
+                        )
                         .map((item, index) => (
                           <div key={index}>
                             <div key={index} style={boxStyle}>
-                              <p>{item.VisitNumber}</p>
+                              <p>{item.VN}</p>
                             </div>
                           </div>
                         ))}
@@ -296,13 +304,11 @@ const SSEComponent = () => {
                         </thead>
                         <tbody>
                           {postsEnd
-                            .filter(
-                              (item) => item.PresStatus === "Send to Doctor"
-                            )
+                            .filter((item) => item.StatusQ === 4)
                             .map((item, index) => (
                               <tr key={index} style={rowStyle}>
-                                <td style={cellStyle}>{item.VisitNumber}</td>
-                                <td style={cellStyle}>{item.LocationUID}</td>
+                                <td style={cellStyle}>{item.VN}</td>
+                                <td style={cellStyle}>{item.Rooms}</td>
                               </tr>
                             ))}
                         </tbody>
