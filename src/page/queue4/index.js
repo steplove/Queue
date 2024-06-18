@@ -103,8 +103,7 @@ const SSEComponent = () => {
 
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      const dataWait = data.slice(0, 9);
-      setPosts(dataWait);
+      setPosts(data);
       const filteredPosts = data.filter(
         (post) => post.PresStatus === "Sent_to_doctor" && post.Station === 4
       );
@@ -131,6 +130,14 @@ const SSEComponent = () => {
       eventSource.close();
     };
   }, [lastData, runFunction]);
+  const displayedPosts = posts.filter(
+    (item) => item.PresStatus === "Registered"
+  );
+
+  const placeholders = Array.from(
+    { length: Math.max(0, 9 - displayedPosts.length) },
+    (_, i) => ({ VisitNumber: `Placeholder ${i + 1}` })
+  );
   return (
     <>
       <div
@@ -234,9 +241,13 @@ const SSEComponent = () => {
                         flexWrap: "wrap",
                       }}
                     >
-                      {posts
+                      {displayedPosts
+                        .concat(placeholders)
+                        .slice(0, 9)
                         .filter(
-                          (item) => item.PresStatus === "Registered" && item.Station === 4
+                          (item) =>
+                            item.PresStatus === "Registered" &&
+                            item.Station === 4
                         )
                         .map((item, index) => (
                           <div key={index}>
@@ -298,7 +309,9 @@ const SSEComponent = () => {
                         </thead>
                         <tbody>
                           {postsEnd
-                            .filter((item) => item.PresStatus === "Sent_to_doctor")
+                            .filter(
+                              (item) => item.PresStatus === "Sent_to_doctor"
+                            )
                             .map((item, index) => (
                               <tr key={index} style={rowStyle}>
                                 <td style={cellStyle}>{item.VisitNumber}</td>

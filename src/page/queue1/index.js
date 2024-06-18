@@ -101,8 +101,7 @@ const SSEComponent = () => {
 
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      const dataWait = data.slice(0, 9);
-      setPosts(dataWait);
+      setPosts(data);
       const filteredPosts = data.filter(
         (post) => post.PresStatus === "Sent_to_doctor" && post.Station === 1
       );
