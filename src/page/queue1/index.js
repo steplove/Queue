@@ -129,7 +129,14 @@ const SSEComponent = () => {
       eventSource.close();
     };
   }, [lastData, runFunction]);
-  console.log(posts);
+  const displayedPosts = posts.filter(
+    (item) => item.PresStatus === "Registered"
+  );
+
+  const placeholders = Array.from(
+    { length: Math.max(0, 9 - displayedPosts.length) },
+    (_, i) => ({ VisitNumber: `Placeholder ${i + 1}` })
+  );
   return (
     <>
       <div
@@ -233,7 +240,9 @@ const SSEComponent = () => {
                         flexWrap: "wrap",
                       }}
                     >
-                      {posts
+                      {displayedPosts
+                       .concat(placeholders)
+                       .slice(0, 9)
                         .filter(
                           (item) =>
                             item.PresStatus === "Registered" &&
