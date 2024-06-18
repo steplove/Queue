@@ -131,7 +131,7 @@ const SSEComponent = () => {
     };
   }, [lastData, runFunction]);
   const displayedPosts = posts.filter(
-    (item) => item.PresStatus === "Registered"
+    (item) => item.PresStatus === "Registered" && item.Station === 3
   );
 
   const placeholders = Array.from(

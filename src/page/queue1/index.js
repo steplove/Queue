@@ -129,7 +129,7 @@ const SSEComponent = () => {
     };
   }, [lastData, runFunction]);
   const displayedPosts = posts.filter(
-    (item) => item.PresStatus === "Registered"
+    (item) => item.PresStatus === "Registered" && item.Station === 1
   );
 
   const placeholders = Array.from(
@@ -240,8 +240,8 @@ const SSEComponent = () => {
                       }}
                     >
                       {displayedPosts
-                       .concat(placeholders)
-                       .slice(0, 9)
+                        .concat(placeholders)
+                        .slice(0, 9)
                         .filter(
                           (item) =>
                             item.PresStatus === "Registered" &&
