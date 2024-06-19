@@ -48,35 +48,35 @@ function ManualQueue() {
   const handleButtonClick = () => {
     repeatQueue();
   };
-  const breakQueue = () => {
-    try {
-      if (lastData) {
-        const dataToSend = {
-          Station: lastData.Station,
-        };
-        console.log("Data to send:", dataToSend);
-        axios
-          .post(`${BASE_URL}/api/updatebreakFinace`, dataToSend, {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
-          .then((response) => {
-            console.log("Success:", response.data);
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-          });
-      } else {
-        console.error("callagain array is empty or undefined");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
-  const handleButtonClickbreak = () => {
-    breakQueue();
-  };
+  // const breakQueue = () => {
+  //   try {
+  //     if (lastData) {
+  //       const dataToSend = {
+  //         Station: lastData.Station,
+  //       };
+  //       console.log("Data to send:", dataToSend);
+  //       axios
+  //         .post(`${BASE_URL}/api/updatebreakFinace`, dataToSend, {
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //           },
+  //         })
+  //         .then((response) => {
+  //           console.log("Success:", response.data);
+  //         })
+  //         .catch((error) => {
+  //           console.error("Error:", error);
+  //         });
+  //     } else {
+  //       console.error("callagain array is empty or undefined");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error:", error);
+  //   }
+  // };
+  // const handleButtonClickbreak = () => {
+  //   breakQueue();
+  // };
   const isEqual = (obj1, obj2) => JSON.stringify(obj1) === JSON.stringify(obj2);
 
   const handleKeyDown = useCallback((event) => {
