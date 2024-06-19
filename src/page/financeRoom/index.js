@@ -134,9 +134,7 @@ const SSEComponent = () => {
 
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      const dataWait = data.slice(0, 9);
-      setPosts(dataWait);
-
+      setPosts(data);
       //จ่ายเงิน
       const filteredBilling = data.filter((post) => post.PresStatus === "Pay");
 
@@ -180,7 +178,7 @@ const SSEComponent = () => {
     (_, i) => ({ VisitNumber: `Placeholder ${i + 1}` })
   );
   const displayedPostsDrug = posts.filter(
-    (item) => item.PresStatus === "Waiting_to_pay"
+    (item) => item.PresStatus === "Pay" && item.HaveDrug === 1
   );
 
   const placeholdersDrug = Array.from(
@@ -303,7 +301,7 @@ const SSEComponent = () => {
                     รอจ่ายเงิน
                   </p>
                   {/* รอจ่ายเงิน */}
-                  {displayedPosts.length === 0 ? (
+                  {posts.length === 0 ? (
                     <Col lg={12}>
                       <div
                         style={{
