@@ -231,6 +231,7 @@ function ManualQueue() {
       }
     }
   };
+  
   const displayedPosts = posts.filter(
     (item) => item.PresStatus === "Registered" && item.Station === 1
   );

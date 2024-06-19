@@ -145,9 +145,7 @@ const SSEComponent = () => {
         (a, b) => new Date(b.MWhen) - new Date(a.MWhen)
       )[0];
       //รับยา
-      const filteredPhamacy = data.filter(
-        (post) => post.PresStatus === "Drug"
-      );
+      const filteredPhamacy = data.filter((post) => post.PresStatus === "Drug");
       // หาเวลาที่มากที่สุด รับยา
       const newDataQueuePhamacy = filteredPhamacy.sort(
         (a, b) => new Date(b.MWhen) - new Date(a.MWhen)
@@ -172,6 +170,23 @@ const SSEComponent = () => {
       eventSource.close();
     };
   }, [lastData, runFunction, lastPhamacy, runFunctionDrug]);
+
+  const displayedPosts = posts.filter(
+    (item) => item.PresStatus === "Waiting_to_pay"
+  );
+
+  const placeholders = Array.from(
+    { length: Math.max(0, 9 - displayedPosts.length) },
+    (_, i) => ({ VisitNumber: `Placeholder ${i + 1}` })
+  );
+  const displayedPostsDrug = posts.filter(
+    (item) => item.PresStatus === "Waiting_to_pay"
+  );
+
+  const placeholdersDrug = Array.from(
+    { length: Math.max(0, 9 - displayedPostsDrug.length) },
+    (_, i) => ({ VisitNumber: `Placeholder ${i + 1}` })
+  );
   return (
     <>
       <div
@@ -288,7 +303,7 @@ const SSEComponent = () => {
                     รอจ่ายเงิน
                   </p>
                   {/* รอจ่ายเงิน */}
-                  {posts.length === 0 ? (
+                  {displayedPosts.length === 0 ? (
                     <Col lg={12}>
                       <div
                         style={{
@@ -317,7 +332,9 @@ const SSEComponent = () => {
                         flexWrap: "wrap",
                       }}
                     >
-                      {posts
+                      {displayedPosts
+                        .concat(placeholders)
+                        .slice(0, 9)
                         .filter((item) => item.PresStatus === "Waiting_to_pay")
                         .map((item, index) => (
                           <div key={index}>
@@ -373,7 +390,7 @@ const SSEComponent = () => {
                     รอรับยา
                   </p>
                   {/* รอรับยา */}
-                  {posts.length === 0 ? (
+                  {displayedPostsDrug.length === 0 ? (
                     <Col lg={12}>
                       <div
                         style={{
@@ -402,7 +419,9 @@ const SSEComponent = () => {
                         flexWrap: "wrap",
                       }}
                     >
-                      {posts
+                      {displayedPostsDrug
+                        .concat(placeholdersDrug)
+                        .slice(0, 9)
                         .filter(
                           (item) =>
                             item.PresStatus === "Pay" && item.HaveDrug === 1
