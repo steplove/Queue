@@ -25,7 +25,7 @@ function ManualQueue() {
         console.log("Data to send:", dataToSend);
 
         axios
-          .post(`${BASE_URL}/api/updatecallDrug`, dataToSend, {
+          .post(`${BASE_URL}/api/updatecallDrugaAndFinace`, dataToSend, {
             headers: {
               "Content-Type": "application/json",
             },
