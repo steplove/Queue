@@ -4,19 +4,27 @@ import { Row, Col } from "react-bootstrap";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import SlideComponent from "../../components/SlideComponent";
-import "../../constants/string";
-import { inroom, number_B, room_B, waiting_call_B } from "../../constants/string";
+import {
+  payment_room,
+  pharmacy_room,
+  waiting_for_medicine,
+  waiting_for_payment,
+} from "../../constants/string";
+
 const SSEComponent = () => {
   const [posts, setPosts] = useState([]);
-  const [postsEnd, setPostsEnd] = useState([]);
   const [fillPost, setFillPost] = useState(null);
+  const [fillPhamacy, setFillPhamacy] = useState(null);
   const [lastData, setLastData] = useState(null);
+  const [lastPhamacy, setLastPhamacy] = useState(null);
   const url = BASE_URL_Sound + "/assets/audio/";
   const please = BASE_URL_Sound + "/assets/audio/please.mp3";
-  const doctor_room = BASE_URL_Sound + "/assets/audio/doctor_room.mp3";
+  const cashier = BASE_URL_Sound + "/assets/audio/pay_cashier.mp3";
+  const paydrug = BASE_URL_Sound + "/assets/audio/pay-drug.mp3";
   const ka = BASE_URL_Sound + "/assets/audio/ka.mp3";
   const isPlayingRef = useRef(false);
   const audioQueue = useRef([]);
+
   const isEqual = (obj1, obj2) => JSON.stringify(obj1) === JSON.stringify(obj2);
 
   const playNextSound = useCallback(() => {
@@ -51,27 +59,57 @@ const SSEComponent = () => {
     (newDataQueue) => {
       if (newDataQueue) {
         const latestData = newDataQueue.VisitNumber;
-        const RoomsData = newDataQueue.Rooms;
+        // const roomVisitNumber = newDataQueue[0].Rooms;
         const soundFiles = latestData
           .split("")
           .map((digit) => `${url}${digit}.mp3`);
-        const soundFilesRooms = RoomsData.toString()
-          .split("")
-          .map((digit) => `${url}${digit}.mp3`);
-        const combinedSrcArray = [please, ...soundFiles, doctor_room];
+        // const soundFilesRooms = roomVisitNumber
+        //   .split("")
+        //   .map((digit) => `${url}${digit}.mp3`);
+        const combinedSrcArray = [please, ...soundFiles, cashier];
         const newCombinedSrcArray = combinedSrcArray.concat(
-          soundFilesRooms,
+          // soundFilesRooms,
           ka
         );
+
         audioQueue.current.push(newCombinedSrcArray);
+
         if (!isPlayingRef.current) {
           playNextSound();
         }
-        // } else {
-        //   console.log("ไม่มีข้อมูลใหม่");
+      } else {
+        console.log("ไม่มีข้อมูลใหม่");
       }
     },
-    [url, please, doctor_room, ka, playNextSound]
+    [url, please, cashier, ka, playNextSound]
+  );
+  const runFunctionDrug = useCallback(
+    (newDataQueue) => {
+      if (newDataQueue) {
+        const latestData = newDataQueue.VisitNumber;
+        // const roomVisitNumber = newDataQueue[0].Rooms;
+        const soundFiles = latestData
+          .split("")
+          .map((digit) => `${url}${digit}.mp3`);
+        // const soundFilesRooms = roomVisitNumber
+        //   .split("")
+        //   .map((digit) => `${url}${digit}.mp3`);
+        const combinedSrcArray = [please, ...soundFiles, paydrug];
+        const newCombinedSrcArray = combinedSrcArray.concat(
+          // soundFilesRooms,
+          ka
+        );
+
+        audioQueue.current.push(newCombinedSrcArray);
+
+        if (!isPlayingRef.current) {
+          playNextSound();
+        }
+      } else {
+        console.log("ไม่มีข้อมูลใหม่");
+      }
+    },
+    [url, please, paydrug, ka, playNextSound]
   );
 
   const handleKeyDown = useCallback(
@@ -103,21 +141,28 @@ const SSEComponent = () => {
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
       setPosts(data);
-      const filteredPosts = data.filter(
-        (post) => post.PresStatus === "Sent_to_doctor" && post.Station === 1
-      );
-      // หาเวลาที่มากที่สุด
-      const newDataQueue = filteredPosts.sort(
+      //จ่ายเงิน
+      const filteredBilling = data.filter((post) => post.PresStatus === "Pay");
+
+      // หาเวลาที่มากที่สุด จ่ายเงิน
+      const newDataQueue = filteredBilling.sort(
         (a, b) => new Date(b.MWhen) - new Date(a.MWhen)
       )[0];
-      const oldDataQueue = filteredPosts
-        .sort((a, b) => new Date(b.MWhen) - new Date(a.MWhen))
-        .slice(1, 6);
+      //รับยา
+      const filteredPhamacy = data.filter((post) => post.PresStatus === "Drug");
+      // หาเวลาที่มากที่สุด รับยา
+      const newDataQueuePhamacy = filteredPhamacy.sort(
+        (a, b) => new Date(b.MWhen) - new Date(a.MWhen)
+      )[0];
       if (!isEqual(newDataQueue, lastData)) {
         setFillPost(newDataQueue);
-        runFunction(newDataQueue);
+        // runFunction(newDataQueue);
         setLastData(newDataQueue);
-        setPostsEnd(oldDataQueue);
+      }
+      if (!isEqual(newDataQueuePhamacy, lastPhamacy)) {
+        setFillPhamacy(newDataQueuePhamacy);
+        runFunctionDrug(newDataQueuePhamacy);
+        setLastPhamacy(newDataQueuePhamacy);
       }
     };
 
@@ -128,13 +173,22 @@ const SSEComponent = () => {
     return () => {
       eventSource.close();
     };
-  }, [lastData, runFunction]);
+  }, [lastData, runFunction, lastPhamacy, runFunctionDrug]);
+
   const displayedPosts = posts.filter(
-    (item) => item.PresStatus === "Arrived" && item.Station === 1
+    (item) => item.PresStatus === "Waiting_to_pay"
   );
 
   const placeholders = Array.from(
     { length: Math.max(0, 9 - displayedPosts.length) },
+    (_, i) => ({ VisitNumber: `Placeholder ${i + 1}` })
+  );
+  const displayedPostsDrug = posts.filter(
+    (item) => item.PresStatus === "Pay" && item.HaveDrug === 1
+  );
+
+  const placeholdersDrug = Array.from(
+    { length: Math.max(0, 9 - displayedPostsDrug.length) },
     (_, i) => ({ VisitNumber: `Placeholder ${i + 1}` })
   );
   return (
@@ -169,17 +223,16 @@ const SSEComponent = () => {
                 <p
                   style={{
                     margin: "0",
-                    marginRight: "12%",
-                    marginLeft: "20%",
+                    marginRight: "9%",
+                    marginLeft: "19%",
                   }}
                 >
-                  หมายเลข
+                  ห้องจ่ายเงิน
                   <br />
                   <span style={{ display: "block", fontSize: "1.5rem" }}>
-                    {number_B}
+                    {payment_room}
                   </span>{" "}
                 </p>
-
                 <div
                   style={{
                     float: "center",
@@ -190,11 +243,11 @@ const SSEComponent = () => {
                     marginTop: "10px",
                   }}
                 ></div>
-                <p>
-                  ห้องตรวจ
+                <p style={{}}>
+                  ห้องรับยา
                   <br />
                   <span style={{ display: "block", fontSize: "1.5rem" }}>
-                    {room_B}
+                    {pharmacy_room}
                   </span>{" "}
                 </p>
               </div>
@@ -212,14 +265,26 @@ const SSEComponent = () => {
                         <p className="blinking-text">{fillPost.VisitNumber}</p>
                       </div>
                     </Col>
+                  </>
+                ) : (
+                  <Col lg={6}>
+                    <div style={boxshowQueue}>
+                      <p className="blinking-text"></p>
+                    </div>
+                  </Col>
+                )}
+                {fillPhamacy ? (
+                  <>
                     <Col lg={6}>
                       <div style={boxshowQueue}>
-                        <p className="blinking-text">{fillPost.Rooms}</p>
+                        <p className="blinking-text">
+                          {fillPhamacy.VisitNumber}
+                        </p>
                       </div>
                     </Col>
                   </>
                 ) : (
-                  <Col lg={12}>
+                  <Col lg={6}>
                     <div style={boxshowQueue}>
                       <p className="blinking-text"></p>
                     </div>
@@ -235,16 +300,45 @@ const SSEComponent = () => {
                 }}
               >
                 <Col lg={12}>
-                  <p style={boxtitle}>
-                    รอเรียกตรวจ
+                  <p
+                    style={{
+                      backgroundColor: "#9575CD",
+                      color: "#ffffff",
+                      fontWeight: "bold",
+                      fontSize: "2rem",
+                      textAlign: "center",
+                      width: "95%",
+                      height: "19%",
+                      borderRadius: "50px",
+                      textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+                      boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
+                    }}
+                  >
+                    รอจ่ายเงิน
                     <br />
                     <span style={{ display: "block", fontSize: "1.5rem" }}>
-                      {waiting_call_B}
+                      {waiting_for_payment}
                     </span>{" "}
                   </p>
+                  {/* รอจ่ายเงิน */}
                   {posts.length === 0 ? (
                     <Col lg={12}>
-                      <div style={boxStyle}>
+                      <div
+                        style={{
+                          backgroundColor: "#B39DDB",
+                          color: "#ffffff",
+                          padding: "10px",
+                          borderRadius: "10px",
+                          width: "40%",
+                          height: "10%",
+                          fontSize: "2rem",
+                          textAlign: "center",
+                          fontWeight: "bold",
+                          textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+                          boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
+                          margin: "10px",
+                        }}
+                      >
                         <p></p>
                       </div>
                     </Col>
@@ -259,14 +353,26 @@ const SSEComponent = () => {
                       {displayedPosts
                         .concat(placeholders)
                         .slice(0, 9)
-                        .filter(
-                          (item) =>
-                            item.PresStatus === "Arrived" &&
-                            item.Station === 1
-                        )
+                        .filter((item) => item.PresStatus === "Waiting_to_pay")
                         .map((item, index) => (
                           <div key={index}>
-                            <div key={index} style={boxStyle}>
+                            <div
+                              key={index}
+                              style={{
+                                backgroundColor: "#B39DDB",
+                                color: "#ffffff",
+                                padding: "10px",
+                                borderRadius: "10px",
+                                width: "85%",
+                                height: "70%",
+                                fontSize: "2.5rem",
+                                textAlign: "center",
+                                fontWeight: "bold",
+                                textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+                                boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
+                                margin: "10px",
+                              }}
+                            >
                               <p>{item.VisitNumber}</p>
                             </div>
                           </div>
@@ -285,14 +391,28 @@ const SSEComponent = () => {
                   }}
                 ></div>
                 <Col lg={12}>
-                  <p style={boxtitle}>
-                    เข้าห้องตรวจ
+                  <p
+                    style={{
+                      backgroundColor: "#9575CD",
+                      color: "#ffffff",
+                      fontWeight: "bold",
+                      fontSize: "2rem",
+                      textAlign: "center",
+                      width: "95%",
+                      height: "19%",
+                      borderRadius: "50px",
+                      textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+                      boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
+                    }}
+                  >
+                    รอรับยา
                     <br />
                     <span style={{ display: "block", fontSize: "1.5rem" }}>
-                     {inroom}
+                      {waiting_for_medicine}
                     </span>{" "}
                   </p>
-                  {posts.length === 0 ? (
+                  {/* รอรับยา */}
+                  {displayedPostsDrug.length === 0 ? (
                     <Col lg={12}>
                       <div
                         style={{
@@ -307,53 +427,50 @@ const SSEComponent = () => {
                           fontWeight: "bold",
                           textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
                           boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
-                          margin: "10px auto",
+                          margin: "10px",
                         }}
                       >
                         <p></p>
                       </div>
                     </Col>
                   ) : (
-                    <div style={{ padding: "10px" }}>
-                      <table
-                        style={{
-                          width: "100%",
-                          borderCollapse: "collapse",
-                        }}
-                      >
-                        <thead>
-                          <tr>
-                            <th style={headerStyle}>
-                              หมายเลข
-                              <span
-                                style={{ display: "block", fontSize: "1rem" }}
-                              >
-                                {number_B}
-                              </span>{" "}
-                            </th>
-                            <th style={headerStyle}>
-                              ห้องตรวจ
-                              <span
-                                style={{ display: "block", fontSize: "1rem" }}
-                              >
-                                {room_B}
-                              </span>{" "}
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {postsEnd
-                            .filter(
-                              (item) => item.PresStatus === "Sent_to_doctor"
-                            )
-                            .map((item, index) => (
-                              <tr key={index} style={rowStyle}>
-                                <td style={cellStyle}>{item.VisitNumber}</td>
-                                <td style={cellStyle}>{item.Rooms}</td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      {displayedPostsDrug
+                        .concat(placeholdersDrug)
+                        .slice(0, 9)
+                        .filter(
+                          (item) =>
+                            item.PresStatus === "Pay" && item.HaveDrug === 1
+                        )
+                        .map((item, index) => (
+                          <div key={index}>
+                            <div
+                              key={index}
+                              style={{
+                                backgroundColor: "#B39DDB",
+                                color: "#ffffff",
+                                padding: "10px",
+                                borderRadius: "10px",
+                                width: "85%",
+                                height: "70%",
+                                fontSize: "2.5rem",
+                                textAlign: "center",
+                                fontWeight: "bold",
+                                textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+                                boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
+                                margin: "10px",
+                              }}
+                            >
+                              <p>{item.VisitNumber}</p>
+                            </div>
+                          </div>
+                        ))}
                     </div>
                   )}
                 </Col>
@@ -362,11 +479,11 @@ const SSEComponent = () => {
           </Row>
         </div>
       </div>
-
       <Footer />
     </>
   );
 };
+
 const titleTop = {
   display: "flex",
   flexDirection: "row",
@@ -381,59 +498,6 @@ const titleTop = {
   textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
   boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
   marginTop: "-10%",
-};
-const headerStyle = {
-  backgroundColor: "#B39DDB",
-  color: "#ffffff",
-  padding: "10px",
-  borderRadius: "10px 10px 0 0",
-  fontSize: "1.5rem",
-  textAlign: "center",
-  fontWeight: "bold",
-  textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-  boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
-  height: "12%",
-};
-
-const rowStyle = {
-  backgroundColor: "#f3e5f5",
-  color: "#000000",
-  textAlign: "center",
-  fontSize: "2rem",
-  fontWeight: "bold",
-  textShadow: "1px 1px 2px rgba(0, 0, 0, 0.1)",
-};
-
-const cellStyle = {
-  padding: "10px",
-  borderBottom: "1px solid #ddd",
-};
-
-const boxStyle = {
-  backgroundColor: "#B39DDB",
-  color: "#ffffff",
-  padding: "10px",
-  borderRadius: "10px",
-  width: "85%",
-  height: "70%",
-  fontSize: "2.5rem",
-  textAlign: "center",
-  fontWeight: "bold",
-  textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-  boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
-  margin: "10px",
-};
-const boxtitle = {
-  backgroundColor: "#9575CD",
-  color: "#ffffff",
-  fontWeight: "bold",
-  fontSize: "2rem",
-  textAlign: "center",
-  width: "95%",
-  height: "19%",
-  borderRadius: "50px",
-  textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-  boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
 };
 const boxshowQueue = {
   backgroundColor: "#B39DDB",

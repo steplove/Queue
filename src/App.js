@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "../src/assets/css/bootstrap.min.css";
 import PressureMeasuringNurse from "./page/pressureMeasuring_nurse";
 import FinanceRoom from "./page/financeRoom"
+import DrugRoom from "./page/drugRoom"
 import ManualQueue1 from "./page/manualQueue1"
 import ManualQueue2 from "./page/manualQueue2"
 import ManualQueue3 from "./page/manualQueue3"
@@ -23,6 +24,7 @@ function App() {
         <Route path="/Queue4" element={<Queue4 />} />
         <Route path="/PressureMeasuringNurse" element={<PressureMeasuringNurse />} />
         <Route path="/QueueFinance" element={<FinanceRoom />} />
+        <Route path="/QueueDrug" element={<DrugRoom />} />
         <Route path="/ManualQueue1" element={<ManualQueue1 />} />
         <Route path="/ManualQueue2" element={<ManualQueue2 />} />
         <Route path="/ManualQueue3" element={<ManualQueue3 />} />

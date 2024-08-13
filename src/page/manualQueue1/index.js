@@ -138,13 +138,13 @@ function ManualQueue() {
 
   const handleSelectRoom = (room) => {
     let rooms = room.toString();
-    console.log(rooms, "rooms");
-    console.log(
-      "เลือกห้องที่เข้าพบหมอ",
-      typeof rooms,
-      "room.toString() มีค่า",
-      rooms === "" ? "<empty string>" : rooms
-    );
+    // console.log(rooms, "rooms");
+    // console.log(
+    //   "เลือกห้องที่เข้าพบหมอ",
+    //   typeof rooms,
+    //   "room.toString() มีค่า",
+    //   rooms === "" ? "<empty string>" : rooms
+    // );
     // console.log(
     //   checkrooms.filter((post) => post.PresStatus === 4),
     //   "checkrooms"
@@ -155,7 +155,7 @@ function ManualQueue() {
         post.Rooms === rooms &&
         post.Station === 1
     );
-    console.log(checkroom, "checkroom");
+    // console.log(checkroom, "checkroom");
     if (checkroom.length > 0) {
       checkroom.forEach((room) => {
         console.log(
@@ -233,7 +233,7 @@ function ManualQueue() {
   };
   
   const displayedPosts = posts.filter(
-    (item) => item.PresStatus === "Registered" && item.Station === 1
+    (item) => item.PresStatus === "Arrived" && item.Station === 1
   );
 
   const placeholders = Array.from(
@@ -305,7 +305,7 @@ function ManualQueue() {
                     .slice(0, 9)
                     .filter(
                       (item) =>
-                        item.PresStatus === "Registered" && item.Station === 1
+                        item.PresStatus === "Arrived" && item.Station === 1
                     )
                     .map((item, index) => (
                       <div

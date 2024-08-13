@@ -2,15 +2,16 @@ import React, { useState, useEffect } from "react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import { BASE_URL } from "../../constants/constants";
 
 const SlideComponent = () => {
   const [images, setImages] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:3001/api/images")
-      .then(response => response.json())
-      .then(data => setImages(data))
-      .catch(error => console.error('Error fetching images:', error));
+    fetch(BASE_URL + "/api/images")
+      .then((response) => response.json())
+      .then((data) => setImages(data))
+      .catch((error) => console.error("Error fetching images:", error));
   }, []);
 
   const settings = {

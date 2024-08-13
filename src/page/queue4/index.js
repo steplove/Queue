@@ -4,7 +4,12 @@ import { Row, Col } from "react-bootstrap";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import SlideComponent from "../../components/SlideComponent";
-
+import {
+  inroom,
+  number_B,
+  room_B,
+  waiting_call_B,
+} from "../../constants/string";
 const SSEComponent = () => {
   const [posts, setPosts] = useState([]);
   const [postsEnd, setPostsEnd] = useState([]);
@@ -131,7 +136,7 @@ const SSEComponent = () => {
     };
   }, [lastData, runFunction]);
   const displayedPosts = posts.filter(
-    (item) => item.PresStatus === "Registered" && item.Station === 4
+    (item) => item.PresStatus === "Arrived" && item.Station === 4
   );
 
   const placeholders = Array.from(
@@ -171,10 +176,14 @@ const SSEComponent = () => {
                   style={{
                     margin: "0",
                     marginRight: "12%",
-                    marginLeft: "12%",
+                    marginLeft: "20%",
                   }}
                 >
                   หมายเลข
+                  <br />
+                  <span style={{ display: "block", fontSize: "1.5rem" }}>
+                    {number_B}
+                  </span>{" "}
                 </p>
                 <div
                   style={{
@@ -186,7 +195,13 @@ const SSEComponent = () => {
                     marginTop: "10px",
                   }}
                 ></div>
-                <p style={{}}>ห้องตรวจ</p>
+                <p>
+                  ห้องตรวจ
+                  <br />
+                  <span style={{ display: "block", fontSize: "1.5rem" }}>
+                    {room_B}
+                  </span>{" "}
+                </p>
               </div>
               <div
                 style={{
@@ -225,7 +240,12 @@ const SSEComponent = () => {
                 }}
               >
                 <Col lg={12}>
-                  <p style={boxtitle}>รอเรียกตรวจ</p>
+                  <p style={boxtitle}>
+                    รอเรียกตรวจ
+                    <span style={{ display: "block", fontSize: "1.5rem" }}>
+                      {waiting_call_B}
+                    </span>{" "}
+                  </p>
                   {/* รอเข้าตรวจ */}
                   {posts.length === 0 ? (
                     <Col lg={12}>
@@ -246,7 +266,7 @@ const SSEComponent = () => {
                         .slice(0, 9)
                         .filter(
                           (item) =>
-                            item.PresStatus === "Registered" &&
+                            item.PresStatus === "Arrived" &&
                             item.Station === 4
                         )
                         .map((item, index) => (
@@ -270,7 +290,13 @@ const SSEComponent = () => {
                   }}
                 ></div>
                 <Col lg={12}>
-                  <p style={boxtitle}>เข้าห้องตรวจ</p>
+                  <p style={boxtitle}>
+                    เข้าห้องตรวจ
+                    <br />
+                    <span style={{ display: "block", fontSize: "1.5rem" }}>
+                      {inroom}
+                    </span>{" "}
+                  </p>
                   {/* เข้าห้องตรวจ */}
                   {posts.length === 0 ? (
                     <Col lg={12}>
@@ -303,8 +329,22 @@ const SSEComponent = () => {
                       >
                         <thead>
                           <tr>
-                            <th style={headerStyle}>หมายเลข</th>
-                            <th style={headerStyle}>ห้องตรวจ</th>
+                            <th style={headerStyle}>
+                              หมายเลข
+                              <span
+                                style={{ display: "block", fontSize: "1rem" }}
+                              >
+                                {number_B}
+                              </span>{" "}
+                            </th>
+                            <th style={headerStyle}>
+                              ห้องตรวจ
+                              <span
+                                style={{ display: "block", fontSize: "1rem" }}
+                              >
+                                {room_B}
+                              </span>{" "}
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
@@ -338,10 +378,10 @@ const titleTop = {
   backgroundColor: "#9575CD",
   color: "#ffffff",
   fontWeight: "bold",
-  fontSize: "3.5rem",
+  fontSize: "2rem",
   textAlign: "center",
   width: "95%",
-  height: "10%",
+  height: "12%",
   borderRadius: "50px",
   textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
   boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
@@ -391,10 +431,10 @@ const boxtitle = {
   backgroundColor: "#9575CD",
   color: "#ffffff",
   fontWeight: "bold",
-  fontSize: "2.5rem",
+  fontSize: "2rem",
   textAlign: "center",
   width: "95%",
-  height: "15%",
+  height: "19%",
   borderRadius: "50px",
   textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
   boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",

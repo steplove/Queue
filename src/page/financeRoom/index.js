@@ -4,6 +4,12 @@ import { Row, Col } from "react-bootstrap";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import SlideComponent from "../../components/SlideComponent";
+import {
+  payment_room,
+  pharmacy_room,
+  waiting_for_medicine,
+  waiting_for_payment,
+} from "../../constants/string";
 
 const SSEComponent = () => {
   const [posts, setPosts] = useState([]);
@@ -155,7 +161,7 @@ const SSEComponent = () => {
       }
       if (!isEqual(newDataQueuePhamacy, lastPhamacy)) {
         setFillPhamacy(newDataQueuePhamacy);
-        runFunctionDrug(newDataQueuePhamacy);
+        // runFunctionDrug(newDataQueuePhamacy);
         setLastPhamacy(newDataQueuePhamacy);
       }
     };
@@ -218,10 +224,14 @@ const SSEComponent = () => {
                   style={{
                     margin: "0",
                     marginRight: "9%",
-                    marginLeft: "8%",
+                    marginLeft: "19%",
                   }}
                 >
                   ห้องจ่ายเงิน
+                  <br />
+                  <span style={{ display: "block", fontSize: "1.5rem" }}>
+                    {payment_room}
+                  </span>{" "}
                 </p>
                 <div
                   style={{
@@ -233,7 +243,13 @@ const SSEComponent = () => {
                     marginTop: "10px",
                   }}
                 ></div>
-                <p style={{}}>ห้องรับยา</p>
+                <p style={{}}>
+                  ห้องรับยา
+                  <br />
+                  <span style={{ display: "block", fontSize: "1.5rem" }}>
+                    {pharmacy_room}
+                  </span>{" "}
+                </p>
               </div>
               <div
                 style={{
@@ -289,16 +305,20 @@ const SSEComponent = () => {
                       backgroundColor: "#9575CD",
                       color: "#ffffff",
                       fontWeight: "bold",
-                      fontSize: "2.5rem",
+                      fontSize: "2rem",
                       textAlign: "center",
                       width: "95%",
-                      height: "15%",
+                      height: "19%",
                       borderRadius: "50px",
                       textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
                       boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
                     }}
                   >
                     รอจ่ายเงิน
+                    <br />
+                    <span style={{ display: "block", fontSize: "1.5rem" }}>
+                      {waiting_for_payment}
+                    </span>{" "}
                   </p>
                   {/* รอจ่ายเงิน */}
                   {posts.length === 0 ? (
@@ -311,7 +331,7 @@ const SSEComponent = () => {
                           borderRadius: "10px",
                           width: "40%",
                           height: "10%",
-                          fontSize: "2.5rem",
+                          fontSize: "2rem",
                           textAlign: "center",
                           fontWeight: "bold",
                           textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
@@ -376,16 +396,20 @@ const SSEComponent = () => {
                       backgroundColor: "#9575CD",
                       color: "#ffffff",
                       fontWeight: "bold",
-                      fontSize: "2.5rem",
+                      fontSize: "2rem",
                       textAlign: "center",
                       width: "95%",
-                      height: "15%",
+                      height: "19%",
                       borderRadius: "50px",
                       textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
                       boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
                     }}
                   >
                     รอรับยา
+                    <br />
+                    <span style={{ display: "block", fontSize: "1.5rem" }}>
+                      {waiting_for_medicine}
+                    </span>{" "}
                   </p>
                   {/* รอรับยา */}
                   {displayedPostsDrug.length === 0 ? (
@@ -466,10 +490,10 @@ const titleTop = {
   backgroundColor: "#9575CD",
   color: "#ffffff",
   fontWeight: "bold",
-  fontSize: "3.5rem",
+  fontSize: "2rem",
   textAlign: "center",
   width: "95%",
-  height: "10%",
+  height: "12%",
   borderRadius: "50px",
   textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
   boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",

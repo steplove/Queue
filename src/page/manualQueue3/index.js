@@ -231,7 +231,7 @@ function ManualQueue() {
     }
   };
   const displayedPosts = posts.filter(
-    (item) => item.PresStatus === "Registered" && item.Station === 3
+    (item) => item.PresStatus === "Arrived" && item.Station === 3
   );
 
   const placeholders = Array.from(
@@ -301,7 +301,7 @@ function ManualQueue() {
                   {displayedPosts
                    .concat(placeholders)
                    .slice(0, 9)
-                    .filter((item) => item.PresStatus === "Registered" && item.Station === 3)
+                    .filter((item) => item.PresStatus === "Arrived" && item.Station === 3)
                     .map((item, index) => (
                       <div
                         key={index}
