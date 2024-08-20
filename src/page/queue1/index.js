@@ -266,7 +266,7 @@ const SSEComponent = () => {
                         )
                         .map((item, index) => (
                           <div key={index}>
-                            <div key={index} style={boxStyle}>
+                            <div key={index} style={ boxStyle}>
                               <p>{item.VisitNumber}</p>
                             </div>
                           </div>
@@ -423,6 +423,7 @@ const boxStyle = {
   boxShadow: "4px 4px 4px 4px rgba(0, 0, 0, 0.3)",
   margin: "10px",
 };
+
 const boxtitle = {
   backgroundColor: "#9575CD",
   color: "#ffffff",

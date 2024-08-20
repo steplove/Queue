@@ -142,14 +142,14 @@ const SSEComponent = () => {
       const data = JSON.parse(event.data);
       setPosts(data);
       //จ่ายเงิน
-      const filteredBilling = data.filter((post) => post.PresStatus === "Pay");
+      const filteredBilling = data.filter((post) => post.PresStatus === "Financial Discharge");
 
       // หาเวลาที่มากที่สุด จ่ายเงิน
       const newDataQueue = filteredBilling.sort(
         (a, b) => new Date(b.MWhen) - new Date(a.MWhen)
       )[0];
       //รับยา
-      const filteredPhamacy = data.filter((post) => post.PresStatus === "Drug");
+      const filteredPhamacy = data.filter((post) => post.PresStatus === "Pharmacy Dispensed");
       // หาเวลาที่มากที่สุด รับยา
       const newDataQueuePhamacy = filteredPhamacy.sort(
         (a, b) => new Date(b.MWhen) - new Date(a.MWhen)
@@ -176,7 +176,7 @@ const SSEComponent = () => {
   }, [lastData, runFunction, lastPhamacy, runFunctionDrug]);
 
   const displayedPosts = posts.filter(
-    (item) => item.PresStatus === "Waiting_to_pay"
+    (item) => item.PresStatus === "Medical Discharge"
   );
 
   const placeholders = Array.from(
@@ -184,7 +184,7 @@ const SSEComponent = () => {
     (_, i) => ({ VisitNumber: `Placeholder ${i + 1}` })
   );
   const displayedPostsDrug = posts.filter(
-    (item) => item.PresStatus === "Pay" && item.HaveDrug === 1
+    (item) => item.PresStatus === "Financial Discharge" && item.HaveDrug === 1
   );
 
   const placeholdersDrug = Array.from(
@@ -353,7 +353,7 @@ const SSEComponent = () => {
                       {displayedPosts
                         .concat(placeholders)
                         .slice(0, 9)
-                        .filter((item) => item.PresStatus === "Waiting_to_pay")
+                        .filter((item) => item.PresStatus === "Medical Discharge")
                         .map((item, index) => (
                           <div key={index}>
                             <div
@@ -446,7 +446,7 @@ const SSEComponent = () => {
                         .slice(0, 9)
                         .filter(
                           (item) =>
-                            item.PresStatus === "Pay" && item.HaveDrug === 1
+                            item.PresStatus === "Financial Discharge" && item.HaveDrug === 1
                         )
                         .map((item, index) => (
                           <div key={index}>

@@ -9,6 +9,7 @@ function ManualQueue() {
   const [showModal, setShowModal] = useState(false);
   const [selectedQueue, setSelectedQueue] = useState(null);
   const [lastData, setLastData] = useState(null);
+  const [lastData1, setLastData1] = useState(null);
   const [callagain, setCallagain] = useState(null);
   const [checkrooms, setCheckrooms] = useState(null);
 
@@ -108,14 +109,19 @@ function ManualQueue() {
       const filteredPosts = data.filter(
         (post) => post.PresStatus === "Sent_to_doctor" && post.Station === 4
       );
-      const newDataQueue = filteredPosts.sort(
+      const newDataQueue = filteredPosts[0];
+
+      const sortDataQueue = filteredPosts.sort(
         (a, b) => new Date(b.MWhen) - new Date(a.MWhen)
       )[0];
 
       if (!isEqual(newDataQueue, lastData)) {
-        setFillPost(newDataQueue);
         setLastData(newDataQueue);
-        setCallagain(newDataQueue);
+      }
+      if (!isEqual(sortDataQueue, lastData1)) {
+        setFillPost(sortDataQueue);
+        setLastData1(sortDataQueue);
+        setCallagain(sortDataQueue);
       }
     };
 
@@ -304,7 +310,7 @@ function ManualQueue() {
                 <div style={boxContainer}>
                   {displayedPosts
                     .concat(placeholders)
-                    .slice(0, 9)
+                    // .slice(0, 9)
                     .filter(
                       (item) =>
                         item.PresStatus === "Arrived" && item.Station === 4
@@ -312,7 +318,7 @@ function ManualQueue() {
                     .map((item, index) => (
                       <div
                         key={index}
-                        style={boxStyle}
+                        style={item.VISTYUID === 58532 ? boxStyle1 : boxStyle}
                         onClick={() => handleShowModal(item.VisitNumber)}
                       >
                         <p>{item.VisitNumber}</p>
@@ -406,6 +412,21 @@ const boxContainer = {
 
 const boxStyle = {
   backgroundColor: "#B39DDB",
+  color: "#ffffff",
+  padding: "10px",
+  borderRadius: "10px",
+  width: "5%",
+  height: "50px",
+  fontSize: "1rem",
+  textAlign: "center",
+  fontWeight: "bold",
+  textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+  boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
+  margin: "5px",
+  flexGrow: 1,
+};
+const boxStyle1 = {
+  backgroundColor: "#9ddbbe",
   color: "#ffffff",
   padding: "10px",
   borderRadius: "10px",

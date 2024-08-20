@@ -9,6 +9,7 @@ function ManualQueue() {
   const [showModal, setShowModal] = useState(false);
   const [selectedQueue, setSelectedQueue] = useState(null);
   const [lastData, setLastData] = useState(null);
+  const [lastData1, setLastData1] = useState(null);
   const [callagain, setCallagain] = useState(null);
   const [checkrooms, setCheckrooms] = useState(null);
 
@@ -19,7 +20,7 @@ function ManualQueue() {
       if (callagain) {
         const dataToSend = {
           VisitNumber: callagain.VisitNumber,
-          PresStatus:"Pay"
+          PresStatus: "Billing Inprogress",
         };
 
         console.log("Data to send:", dataToSend);
@@ -105,15 +106,22 @@ function ManualQueue() {
       // const dataWait = data.slice(0, 9);
       setCheckrooms(data);
       setPosts(data);
-      const filteredPosts = data.filter((post) => post.PresStatus === "Pay");
-      const newDataQueue = filteredPosts.sort(
+      const filteredPosts = data.filter(
+        (post) => post.PresStatus === "Billing Inprogress"
+      );
+      const newDataQueue = filteredPosts[0];
+
+      const sortDataQueue = filteredPosts.sort(
         (a, b) => new Date(b.MWhen) - new Date(a.MWhen)
       )[0];
 
       if (!isEqual(newDataQueue, lastData)) {
-        setFillPost(newDataQueue);
         setLastData(newDataQueue);
-        setCallagain(newDataQueue);
+      }
+      if (!isEqual(sortDataQueue, lastData1)) {
+        setFillPost(sortDataQueue);
+        setLastData1(sortDataQueue);
+        setCallagain(sortDataQueue);
       }
     };
 
@@ -124,7 +132,7 @@ function ManualQueue() {
     return () => {
       eventSource.close();
     };
-  }, [lastData]);
+  }, [lastData, lastData1]);
 
   const handleShowModal = (queue) => {
     setSelectedQueue(queue);
@@ -149,7 +157,7 @@ function ManualQueue() {
     //   "checkrooms"
     // );
     let checkroom = checkrooms.filter(
-      (post) => post.PresStatus === "Pay" && post.HaveDrug === 0
+      (post) => post.PresStatus === "Billing Inprogress" && post.HaveDrug === 0
     );
     //ถ้ามี
     if (checkroom.length > 0) {
@@ -163,7 +171,7 @@ function ManualQueue() {
         );
         const dataToSendOLD = {
           VisitNumber: room.VisitNumber,
-          PresStatus: "Discharge",
+          PresStatus: "Financial Discharge",
         };
         if (dataToSendOLD) {
           axios
@@ -182,7 +190,7 @@ function ManualQueue() {
         }
         const dataToSend = {
           VisitNumber: selectedQueue,
-          PresStatus: "Pay",
+          PresStatus: "Billing Inprogress",
         };
         if (dataToSend) {
           axios
@@ -206,7 +214,7 @@ function ManualQueue() {
       if (room) {
         const dataToSend = {
           VisitNumber: selectedQueue,
-          PresStatus: "Pay",
+          PresStatus: "Billing Inprogress",
         };
 
         axios
@@ -228,7 +236,7 @@ function ManualQueue() {
     }
   };
   const displayedPosts = posts.filter(
-    (item) => item.PresStatus === "Waiting_to_pay"
+    (item) => item.PresStatus === "Medical Discharge"
   );
 
   const placeholders = Array.from(
@@ -297,12 +305,12 @@ function ManualQueue() {
                 <div style={boxContainer}>
                   {displayedPosts
                     .concat(placeholders)
-                    .slice(0, 9)
-                    .filter((item) => item.PresStatus === "Waiting_to_pay")
+                    // .slice(0, 9)
+                    .filter((item) => item.PresStatus === "Medical Discharge")
                     .map((item, index) => (
                       <div
                         key={index}
-                        style={boxStyle}
+                        style={item.VISTYUID === 58532 ? boxStyle1 : boxStyle}
                         onClick={() => handleShowModal(item.VisitNumber)}
                       >
                         <p>{item.VisitNumber}</p>
@@ -396,6 +404,21 @@ const boxContainer = {
 
 const boxStyle = {
   backgroundColor: "#B39DDB",
+  color: "#ffffff",
+  padding: "10px",
+  borderRadius: "10px",
+  width: "5%",
+  height: "50px",
+  fontSize: "1rem",
+  textAlign: "center",
+  fontWeight: "bold",
+  textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+  boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
+  margin: "5px",
+  flexGrow: 1,
+};
+const boxStyle1 = {
+  backgroundColor: "#9ddbbe",
   color: "#ffffff",
   padding: "10px",
   borderRadius: "10px",

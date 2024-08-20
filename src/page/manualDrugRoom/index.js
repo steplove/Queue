@@ -9,6 +9,7 @@ function ManualQueue() {
   const [showModal, setShowModal] = useState(false);
   const [selectedQueue, setSelectedQueue] = useState(null);
   const [lastData, setLastData] = useState(null);
+  const [lastData1, setLastData1] = useState(null);
   const [callagain, setCallagain] = useState(null);
   const [checkrooms, setCheckrooms] = useState(null);
 
@@ -19,7 +20,7 @@ function ManualQueue() {
       if (callagain) {
         const dataToSend = {
           VisitNumber: callagain.VisitNumber,
-          PresStatus:"Drug"
+          PresStatus: "Pharmacy Dispensed",
         };
 
         console.log("Data to send:", dataToSend);
@@ -105,15 +106,22 @@ function ManualQueue() {
       // const dataWait = data.slice(0, 9);
       setCheckrooms(data);
       setPosts(data);
-      const filteredPosts = data.filter((post) => post.PresStatus === "Drug");
-      const newDataQueue = filteredPosts.sort(
+      const filteredPosts = data.filter(
+        (post) => post.PresStatus === "Pharmacy Dispensed"
+      );
+      const newDataQueue = filteredPosts[0]
+
+      const sortDataQueue = filteredPosts.sort(
         (a, b) => new Date(b.MWhen) - new Date(a.MWhen)
       )[0];
 
       if (!isEqual(newDataQueue, lastData)) {
-        setFillPost(newDataQueue);
         setLastData(newDataQueue);
-        setCallagain(newDataQueue);
+      }
+      if (!isEqual(sortDataQueue, lastData1)) {
+        setFillPost(sortDataQueue);
+        setLastData1(sortDataQueue);
+        setCallagain(sortDataQueue);
       }
     };
 
@@ -124,7 +132,7 @@ function ManualQueue() {
     return () => {
       eventSource.close();
     };
-  }, [lastData]);
+  }, [lastData,lastData1]);
 
   const handleShowModal = (queue) => {
     setSelectedQueue(queue);
@@ -148,87 +156,96 @@ function ManualQueue() {
     //   checkrooms.filter((post) => post.PresStatus ===  "Sent_to_doctor"),
     //   "checkrooms"
     // );
-    let checkroom = checkrooms.filter(
-      (post) => post.HaveDrug === 1 && post.PresStatus === "Drug"
-    );
-    //ถ้ามี
-    if (checkroom.length > 0) {
-      checkroom.forEach((room) => {
-        console.log(
-          "พบคนก่อนหน้า",
-          "เลข VisitNumber:",
-          selectedQueue,
-          "ที่ห้องตรวจที่:",
-          room.HaveDrug
-        );
-        const dataToSendOLD = {
-          VisitNumber: room.VisitNumber,
-          PresStatus: "Discharge",
-        };
-        if (dataToSendOLD) {
-          axios
-            .post(`${BASE_URL}/api/update_room_Finace`, dataToSendOLD, {
-              headers: {
-                "Content-Type": "application/json",
-              },
-            })
-            .then((response) => {
-              console.log("Success:", response.data);
-              console.log(dataToSendOLD);
-            })
-            .catch((error) => {
-              console.error("Error:", error);
-            });
-        }
-        const dataToSend = {
-          VisitNumber: selectedQueue,
-          PresStatus: "Drug",
-        };
+    if (room) {
+      console.log(`เรียกคิวหมายเลข ${selectedQueue} ไปยังห้อง ${room}`);
+      const dataToSend = {
+        VisitNumber: selectedQueue,
+        PresStatus: "Pharmacy Dispensed",
+      };
 
-        axios
-          .post(`${BASE_URL}/api/update_room_Finace`, dataToSend, {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
-          .then((response) => {
-            console.log("Success:", response.data);
-            console.log(dataToSend, selectedQueue);
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-          });
-        setShowModal(false);
-      });
-    } else {
-      console.log("ไม่พบคนก่อนหน้า");
-      if (room) {
-        console.log(`เรียกคิวหมายเลข ${selectedQueue} ไปยังห้อง ${room}`);
-        const dataToSend = {
-          VisitNumber: selectedQueue,
-          PresStatus: "Drug",
-        };
+      axios
+        .post(`${BASE_URL}/api/update_room_Finace`, dataToSend, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+        .then((response) => {
+          console.log("Success:", response.data);
+          console.log(dataToSend, selectedQueue);
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+        });
 
-        axios
-          .post(`${BASE_URL}/api/update_room_Finace`, dataToSend, {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
-          .then((response) => {
-            console.log("Success:", response.data);
-            console.log(dataToSend, selectedQueue);
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-          });
-
-        setShowModal(false);
-      }
+      setShowModal(false);
     }
+    // let checkroom = checkrooms.filter(
+    //   (post) => post.HaveDrug === 1 && post.PresStatus === "Drug"
+    // );
+    // //ถ้ามี
+    // if (checkroom.length > 0) {
+    //   checkroom.forEach((room) => {
+    //     console.log(
+    //       "พบคนก่อนหน้า",
+    //       "เลข VisitNumber:",
+    //       selectedQueue,
+    //       "ที่ห้องตรวจที่:",
+    //       room.HaveDrug
+    //     );
+    //     if (room) {
+    //       console.log(`เรียกคิวหมายเลข ${selectedQueue} ไปยังห้อง ${room}`);
+    //       const dataToSend = {
+    //         VisitNumber: selectedQueue,
+    //         PresStatus: "Drug",
+    //       };
+
+    //       axios
+    //         .post(`${BASE_URL}/api/update_room_Finace`, dataToSend, {
+    //           headers: {
+    //             "Content-Type": "application/json",
+    //           },
+    //         })
+    //         .then((response) => {
+    //           console.log("Success:", response.data);
+    //           console.log(dataToSend, selectedQueue);
+    //         })
+    //         .catch((error) => {
+    //           console.error("Error:", error);
+    //         });
+
+    //       setShowModal(false);
+    //     }
+    //     setShowModal(false);
+    //   });
+    // } else {
+    //   console.log("ไม่พบคนก่อนหน้า");
+    //   // if (room) {
+    //   //   console.log(`เรียกคิวหมายเลข ${selectedQueue} ไปยังห้อง ${room}`);
+    //   //   const dataToSend = {
+    //   //     VisitNumber: selectedQueue,
+    //   //     PresStatus: "Drug",
+    //   //   };
+
+    //   //   axios
+    //   //     .post(`${BASE_URL}/api/update_room_Finace`, dataToSend, {
+    //   //       headers: {
+    //   //         "Content-Type": "application/json",
+    //   //       },
+    //   //     })
+    //   //     .then((response) => {
+    //   //       console.log("Success:", response.data);
+    //   //       console.log(dataToSend, selectedQueue);
+    //   //     })
+    //   //     .catch((error) => {
+    //   //       console.error("Error:", error);
+    //   //     });
+
+    //   //   setShowModal(false);
+    //   // }
+    // }
   };
   const displayedPosts = posts.filter(
-    (item) => item.PresStatus === "Pay" && item.HaveDrug === 1
+    (item) => item.PresStatus === "Financial Discharge" && item.HaveDrug === 1
   );
 
   const placeholders = Array.from(
@@ -297,12 +314,12 @@ function ManualQueue() {
                 <div style={boxContainer}>
                   {displayedPosts
                     .concat(placeholders)
-                    .slice(0, 9)
-                    .filter((item) => item.PresStatus === "Pay")
+                    // .slice(0, 9)
+                    .filter((item) => item.PresStatus === "Financial Discharge")
                     .map((item, index) => (
                       <div
                         key={index}
-                        style={boxStyle}
+                        style={item.VISTYUID === 58532 ? boxStyle1 : boxStyle}
                         onClick={() => handleShowModal(item.VisitNumber)}
                       >
                         <p>{item.VisitNumber}</p>
@@ -396,6 +413,21 @@ const boxContainer = {
 
 const boxStyle = {
   backgroundColor: "#B39DDB",
+  color: "#ffffff",
+  padding: "10px",
+  borderRadius: "10px",
+  width: "5%",
+  height: "50px",
+  fontSize: "1rem",
+  textAlign: "center",
+  fontWeight: "bold",
+  textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+  boxShadow: "4px 4px 4px rgba(0, 0, 0, 0.3)",
+  margin: "5px",
+  flexGrow: 1,
+};
+const boxStyle1 = {
+  backgroundColor: "#9ddbbe",
   color: "#ffffff",
   padding: "10px",
   borderRadius: "10px",
